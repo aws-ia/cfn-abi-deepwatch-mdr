@@ -1,0 +1,168 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Configures services and resources for CloudTrail and GuardDuty logging in
+  Deepwatch cloud MDR
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: Source location details
+        Parameters:
+          - pSRAStagingS3KeyPrefix
+          - pSRASourceS3BucketName
+          - pSRASourceS3BucketNamePrefix
+          - pSRAS3BucketRegion
+      - Label:
+          default: General Properties
+        Parameters:
+          - pSRASolutionName
+          - pSRAStagingS3KeyPrefix
+          - pSRASourceS3BucketNamePrefix
+          - pSRAS3BucketRegion
+          - pSRARoleName
+      - Label:
+          default: Testing Properties
+        Parameters:
+          - pSraTestingFlag
+      - Label:
+          default: GuardDuty Configuration Properties
+        Parameters:
+          - pAutoEnableS3Logs
+          - pAutoEnableK8sLogs
+          - pAutoEnableMalwareProtection
+    ParameterLabels:
+      pSRAStagingS3KeyPrefix:
+        default: SRA Staging S3 Bucket Name Prefix
+      pSRASourceS3BucketName:
+        default: SRA Source S3 Location
+      pSRASourceS3BucketNamePrefix:
+        default: SRA Staging S3 Bucket Name Prefix
+      pSRAS3BucketRegion:
+        default: SRA Bucket Region
+      pAutoEnableS3Logs:
+        default: Auto Enable S3 Logs
+      pAutoEnableK8sLogs:
+        default: Auto Enable kubernetes Logs
+      pAutoEnableMalwareProtection:
+        default: Auto Enable malware protection
+      pSRASolutionName:
+        default: SRA Solution Name
+      pSraTestingFlag:
+        default: Testing Flag for SRA
+      pSRARoleName:
+        default: IAM Role name
+Parameters:
+  pSRAStagingS3KeyPrefix:
+    AllowedValues:
+      - cfn-abi-amazon-guardduty
+    Default: cfn-abi-amazon-guardduty
+    Description: >-
+      SRA Staging S3 bucket name prefix for the SRA artifacts relevant to the
+      solutions. (e.g., lambda zips, CloudFormation templates). The account and
+      region are added to the prefix <bucket-name-prefix>-<account-id>-<region>.
+      Example = sra-staging-123456789012-us-east-1.
+    Type: String
+  pSRASourceS3BucketName:
+    AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
+    ConstraintDescription: >-
+      Must be alphanumeric or special characters [., _, -]. In addition, the
+      slash character ( / ) used to delineate hierarchies in parameter names.
+    Default: aws-abi-pilot
+    Description: >-
+      Source bucket for all templates and artefacts that will get copied into
+      staging bucket
+    Type: String
+  pSRASourceS3BucketNamePrefix:
+    AllowedValues:
+      - cfn-abi-amazon-guardduty
+    Default: cfn-abi-amazon-guardduty
+    Description: >-
+      SRA Staging S3 bucket name prefix for the SRA artifacts relevant to the
+      solutions. (e.g., lambda zips, CloudFormation templates). The account and
+      region are added to the prefix <bucket-name-prefix>-<account-id>-<region>.
+      Example = sra-staging-123456789012-us-east-1.
+    Type: String
+  pSRAS3BucketRegion:
+    AllowedPattern: '^[a-z][a-z]-[a-z]*-[0-9]*$'
+    Type: String
+    Default: us-east-1
+  pAutoEnableS3Logs:
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'true'
+    Description: Auto enable S3 logs
+    Type: String
+  pAutoEnableK8sLogs:
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'false'
+    Description: Auto Enable kubernetes Logs
+    Type: String
+  pAutoEnableMalwareProtection:
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'true'
+    Description: Auto Enable malware protection
+    Type: String
+  pSRASolutionName:
+    AllowedValues:
+      - sra-guardduty-org
+    Default: sra-guardduty-org
+    Description: >-
+      The SRA solution name. The default value is the folder name of the
+      solution
+    Type: String
+  pSraTestingFlag:
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Default: 'false'
+    Type: String
+  pSRARoleName:
+    AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
+    ConstraintDescription: 'Must be alphanumeric or special characters [., _, -].'
+    Default: deepwatch-mdr-logs
+    Description: The name of the role that will be created to provide access to ingest logs
+    Type: String
+Resources:
+  CloudTrailStack:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: !Sub >-
+        https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/${pSRAStagingS3KeyPrefix}/submodules/cfn-abi-aws-cloudtrail/templates/sra-cloudtrail-enable-in-org-ssm.yaml
+      Parameters:
+        pSRAStagingS3KeyPrefix: !Ref pSRAStagingS3KeyPrefix
+        pSRASourceS3BucketName: !Ref pSRASourceS3BucketName
+        pSRASourceS3BucketNamePrefix: !Ref pSRASourceS3BucketNamePrefix
+        pSRAS3BucketRegion: !Ref pSRAS3BucketRegion
+  GuardDutyStack:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: !Sub >-
+        https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/${pSRAStagingS3KeyPrefix}/submodules/cfn-abi-amazon-guardduty/templates/sra-guardduty-enable-in-org-ssm.yaml
+      Parameters:
+        pAutoEnableS3Logs: !Ref pAutoEnableS3Logs
+        pAutoEnableK8sLogs: !Ref pAutoEnableK8sLogs
+        pAutoEnableMalwareProtection: !Ref pAutoEnableMalwareProtection
+        pSRASolutionName: !Ref pSRASolutionName
+        pSraTestingFlag: !Ref pSraTestingFlag
+        pSRASourceS3BucketName: !Ref pSRASourceS3BucketName
+        pSRAStagingS3KeyPrefix: !Ref pSRAStagingS3KeyPrefix
+        pSRAS3BucketRegion: !Ref pSRAS3BucketRegion
+        pSRASourceS3BucketNamePrefix: !Ref pSRASourceS3BucketNamePrefix
+  SplunkAccessRoleStack:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: !Sub >-
+        https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/${pSRAStagingS3KeyPrefix}/templates/setup-logging-role.json
+      Parameters:
+        SplunkAccessPolicyRoleName: !Ref pSRARoleName
+Outputs:
+  SplunkRoleArn:
+    Value: !GetAtt 
+      - SplunkAccessRoleStack
+      - Outputs.SplunkRoleArn
+    Description: Please provide to Deepwatch engineer for configuration of Splunk.
