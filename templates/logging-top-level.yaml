@@ -10,14 +10,12 @@ Metadata:
         Parameters:
           - pSRAStagingS3KeyPrefix
           - pSRASourceS3BucketName
-          - pSRASourceS3BucketNamePrefix
           - pSRAS3BucketRegion
       - Label:
           default: General Properties
         Parameters:
           - pSRASolutionName
           - pSRAStagingS3KeyPrefix
-          - pSRASourceS3BucketNamePrefix
           - pSRAS3BucketRegion
           - pSRARoleName
       - Label:
@@ -35,8 +33,6 @@ Metadata:
         default: SRA Staging S3 Bucket Name Prefix
       pSRASourceS3BucketName:
         default: SRA Source S3 Location
-      pSRASourceS3BucketNamePrefix:
-        default: SRA Staging S3 Bucket Name Prefix
       pSRAS3BucketRegion:
         default: SRA Bucket Region
       pAutoEnableS3Logs:
@@ -54,8 +50,8 @@ Metadata:
 Parameters:
   pSRAStagingS3KeyPrefix:
     AllowedValues:
-      - cfn-abi-amazon-guardduty
-    Default: cfn-abi-amazon-guardduty
+      - cfn-abi-deepwatch-mdr
+    Default: cfn-abi-deepwatch-mdr
     Description: >-
       SRA Staging S3 bucket name prefix for the SRA artifacts relevant to the
       solutions. (e.g., lambda zips, CloudFormation templates). The account and
@@ -71,16 +67,6 @@ Parameters:
     Description: >-
       Source bucket for all templates and artefacts that will get copied into
       staging bucket
-    Type: String
-  pSRASourceS3BucketNamePrefix:
-    AllowedValues:
-      - cfn-abi-amazon-guardduty
-    Default: cfn-abi-amazon-guardduty
-    Description: >-
-      SRA Staging S3 bucket name prefix for the SRA artifacts relevant to the
-      solutions. (e.g., lambda zips, CloudFormation templates). The account and
-      region are added to the prefix <bucket-name-prefix>-<account-id>-<region>.
-      Example = sra-staging-123456789012-us-east-1.
     Type: String
   pSRAS3BucketRegion:
     AllowedPattern: '^[a-z][a-z]-[a-z]*-[0-9]*$'
@@ -134,9 +120,6 @@ Resources:
       TemplateURL: !Sub >-
         https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/${pSRAStagingS3KeyPrefix}/submodules/cfn-abi-aws-cloudtrail/templates/sra-cloudtrail-enable-in-org-ssm.yaml
       Parameters:
-        pSRAStagingS3KeyPrefix: !Ref pSRAStagingS3KeyPrefix
-        pSRASourceS3BucketName: !Ref pSRASourceS3BucketName
-        pSRASourceS3BucketNamePrefix: !Ref pSRASourceS3BucketNamePrefix
         pSRAS3BucketRegion: !Ref pSRAS3BucketRegion
   GuardDutyStack:
     Type: 'AWS::CloudFormation::Stack'
@@ -149,17 +132,14 @@ Resources:
         pAutoEnableMalwareProtection: !Ref pAutoEnableMalwareProtection
         pSRASolutionName: !Ref pSRASolutionName
         pSraTestingFlag: !Ref pSraTestingFlag
-        pSRASourceS3BucketName: !Ref pSRASourceS3BucketName
-        pSRAStagingS3KeyPrefix: !Ref pSRAStagingS3KeyPrefix
         pSRAS3BucketRegion: !Ref pSRAS3BucketRegion
-        pSRASourceS3BucketNamePrefix: !Ref pSRASourceS3BucketNamePrefix
   SplunkAccessRoleStack:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       TemplateURL: !Sub >-
-        https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/${pSRAStagingS3KeyPrefix}/templates/setup-logging-role.json
+        https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/${pSRAStagingS3KeyPrefix}/templates/setup-logging-role.yaml
       Parameters:
-        SplunkAccessPolicyRoleName: !Ref pSRARoleName
+        pSRARoleName: !Ref pSRARoleName
 Outputs:
   SplunkRoleArn:
     Value: !GetAtt 

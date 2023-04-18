@@ -10,6 +10,13 @@ Parameters:
     Type: String
 Resources:
   SplunkAccessPolicy:
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: Temporary for initial testing, will change to dynamic naming prior to GA
+          - id: W13
+            reason: Temporary for initial testing, will be adding resource restriction prior to GA
     Type: 'AWS::IAM::ManagedPolicy'
     Properties:
       PolicyDocument:
@@ -87,6 +94,11 @@ Resources:
         - - !Ref pSRARoleName
           - policy
   SplunkRole:
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: Temporary for initial testing, will change to dynamic naming prior to GA
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
