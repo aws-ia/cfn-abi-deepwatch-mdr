@@ -21,4 +21,4 @@ tests:
       pAutoEnableMalwareProtection: 'false'
       pSRASolutionName: sra-guardduty-org
       pSraTestingFlag: 'true'
-      pSRARoleName: 'zac-test'
+      pDeepwatchRoleName: 'deepwatch-mdr-role'
