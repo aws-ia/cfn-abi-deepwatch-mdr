@@ -17,7 +17,7 @@ Metadata:
           - pSRASolutionName
           - pSRAStagingS3KeyPrefix
           - pSRAS3BucketRegion
-          - pSRARoleName
+          - pDeepwatchRoleName
       - Label:
           default: Testing Properties
         Parameters:
@@ -45,8 +45,8 @@ Metadata:
         default: SRA Solution Name
       pSraTestingFlag:
         default: Testing Flag for SRA
-      pSRARoleName:
-        default: IAM Role name
+      pDeepwatchRoleName:
+        default: IAM Role name for Deepwatch solution access
 Parameters:
   pSRAStagingS3KeyPrefix:
     AllowedValues:
@@ -90,7 +90,7 @@ Parameters:
     AllowedValues:
       - 'true'
       - 'false'
-    Default: 'true'
+    Default: 'false'
     Description: Auto Enable malware protection
     Type: String
   pSRASolutionName:
@@ -107,10 +107,10 @@ Parameters:
       - 'false'
     Default: 'false'
     Type: String
-  pSRARoleName:
+  pDeepwatchRoleName:
     AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
     ConstraintDescription: 'Must be alphanumeric or special characters [., _, -].'
-    Default: deepwatch-mdr-logs
+    Default: deepwatch-mdr-role
     Description: The name of the role that will be created to provide access to ingest logs
     Type: String
 Resources:
@@ -132,17 +132,36 @@ Resources:
         pAutoEnableMalwareProtection: !Ref pAutoEnableMalwareProtection
         pSRASolutionName: !Ref pSRASolutionName
         pSraTestingFlag: !Ref pSraTestingFlag
-        pSRAS3BucketRegion: !Ref pSRAS3BucketRegion
-  SplunkAccessRoleStack:
-    Type: 'AWS::CloudFormation::Stack'
+        pSRAS3BucketRegion: !Ref pSRAS3BucketRegion        
+  DeepwatchResourceConfigurationStack:
+    Type: AWS::CloudFormation::StackSet
     Properties:
+      StackSetName: deepwatch-logging-resource-configuration
+      AdministrationRoleARN: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AWSControlTowerStackSetRole
+      CallAs: SELF
+      Capabilities:
+        - CAPABILITY_NAMED_IAM
+      Description: Creates and configures all of the resources needed to begin ingestion of logs into Deepwatch MDR
+      ExecutionRoleName: AWSControlTowerExecution
+      ManagedExecution:
+        Active: true
+      OperationPreferences:
+        FailureTolerancePercentage: 0
+        MaxConcurrentPercentage: 100
+        RegionConcurrencyType: PARALLEL
+      PermissionModel: SELF_MANAGED
+      StackInstancesGroup:
+        - DeploymentTargets:
+            Accounts:
+              - !GetAtt [CloudTrailStack, Outputs.oLogArchiveAccountId]
+          Regions:
+            - !Ref AWS::Region
       TemplateURL: !Sub >-
-        https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/${pSRAStagingS3KeyPrefix}/templates/setup-logging-role.yaml
+        https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/${pSRAStagingS3KeyPrefix}/templates/deepwatch-logging-resource-configuration.yaml
       Parameters:
-        pSRARoleName: !Ref pSRARoleName
-Outputs:
-  SplunkRoleArn:
-    Value: !GetAtt 
-      - SplunkAccessRoleStack
-      - Outputs.SplunkRoleArn
-    Description: Please provide to Deepwatch engineer for configuration of Splunk.
+        - ParameterKey: pGuardDutyBucketName
+          ParameterValue: !GetAtt [GuardDutyStack, Outputs.oPublishingDestinationBucketName]
+        - ParameterKey: pControlTowerBucketName
+          ParameterValue: !GetAtt [CloudTrailStack, Outputs.oOrganizationCloudTrailS3BucketName]
+        - ParameterKey: pDeepwatchRoleName
+          ParameterValue: !Ref pDeepwatchRoleName

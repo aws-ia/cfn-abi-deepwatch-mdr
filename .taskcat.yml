@@ -10,7 +10,7 @@ tests:
   logging-top-level:
     regions:
       - us-east-1
-    template: templates/logging-top-level.yaml
+    template: templates/deepwatch-root-stack.yaml
     parameters:
       pSRAStagingS3KeyPrefix: $[taskcat_project_name]
       pSRASourceS3BucketName: $[taskcat_autobucket]
