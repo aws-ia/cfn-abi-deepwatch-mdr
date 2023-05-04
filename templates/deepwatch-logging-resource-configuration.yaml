@@ -507,10 +507,6 @@ Resources:
           - id: CKV_AWS_173
             comment: Environment variables are not sensitive.
     Properties:
-    DependsOn: 
-      - rGuardDutyQueue
-      - rCloudTrailQueue
-    Properties:
       Handler: index.lambda_handler
       Role: !GetAtt 
         - rCustomResourceLambdaIAMRole
@@ -643,10 +639,7 @@ Resources:
             Resource:
               - !Sub 'arn:aws:s3:::${pGuardDutyBucketName}'
               - !Sub 'arn:aws:s3:::${pControlTowerBucketName}'
-      ManagedPolicyName: !Join 
-        - '-'
-        - - !Ref pDeepwatchRoleName
-          - policy
+      ManagedPolicyName: !Ref pDeepwatchRoleName
 
   rDeepwatchRole:
     Type: 'AWS::IAM::Role'
