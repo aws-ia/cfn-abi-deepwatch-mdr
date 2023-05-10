@@ -120,6 +120,11 @@ Resources:
   
   rGuardDutyQueuePolicy:
     Type: 'AWS::SQS::QueuePolicy'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: F21
+            reason: The condition alleviates any security risk by checking for a specific principal
     Properties:
       PolicyDocument:
         Statement:
@@ -192,6 +197,11 @@ Resources:
 
   rCloudTrailQueuePolicy:
     Type: 'AWS::SQS::QueuePolicy'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: F21
+            reason: The condition alleviates any security risk by checking for a specific principal
     Properties:
       PolicyDocument:
         Statement:
@@ -263,6 +273,11 @@ Resources:
 
   rControlTowerPreProcessedQueuePolicy:
     Type: 'AWS::SQS::QueuePolicy'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: F21
+            reason: The condition alleviates any security risk by checking for a specific principal
     Properties:
       PolicyDocument:
         Statement:
@@ -386,6 +401,11 @@ Resources:
 
   rControlTowerPreProcessedLambdaIAMRole:
     Type: 'AWS::IAM::Role'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W11
+            reason: Wildcards with list actions are necessary, as well as with unknown loggroup naming
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -610,6 +630,11 @@ Resources:
 
   rDeepwatchPolicy:
     Type: 'AWS::IAM::ManagedPolicy'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: This resource should not be replacable. The name is set by the user in the root stack.
     Properties:
       PolicyDocument:
         Version: 2012-10-17
@@ -643,6 +668,11 @@ Resources:
 
   rDeepwatchRole:
     Type: 'AWS::IAM::Role'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: This resource should not be replacable. The name is set by the user in the root stack.
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17

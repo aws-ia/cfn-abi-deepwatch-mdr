@@ -121,6 +121,7 @@ Resources:
         https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/${pSRAStagingS3KeyPrefix}/submodules/cfn-abi-aws-cloudtrail/templates/sra-cloudtrail-enable-in-org-ssm.yaml
       Parameters:
         pSRAS3BucketRegion: !Ref pSRAS3BucketRegion
+        pEnableDataEventsOnly: false
   GuardDutyStack:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
