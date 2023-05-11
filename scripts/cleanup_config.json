@@ -1,23 +1,56 @@
 [
     {
-        "Type": "STACK",
-        "Filter" : "replace-with-stack-name-prefix-to-be-cleaned"
+        "Type" : "S3_BUCKET",
+        "Filter" : "sra-guardduty-org-delivery-",
+        "Account" : "log_account"
     },
     {
         "Type" : "S3_BUCKET",
-        "Filter": "replace-with-s3-bucket-prefix-to-be-cleaned"
-    },
-    {
-        "Type" : "S3_BUCKET",
-        "Filter": "replace-with-s3-bucket-prefix-to-be-cleaned",
-        "Account": "provide-your-account-name"
+        "Filter" : "cfn-abi-amazon-guardduty-"
     },
     {
         "Type" : "SSM_PARAMETER",
-        "Filter" : "/path/to/parameter-prefix-to-delete"
+        "Filter" : "/sra/gd/"
+    },
+    {
+        "Type": "STACK",
+        "Filter" : "tcat-cfn-abi-deepwatch-mdr"
+    },
+    {
+        "Type": "STACK",
+        "Filter" : "tCaT-enable-cloudtrail-ssm-"
+    },
+    {
+        "Type" : "STACK",
+        "Filter": "tCaT-stage-ctrail-content-local-"
+    },
+    {
+        "Type" : "STACK",
+        "Filter": "org-level-trail-dataevent-only"
+    },
+    {
+        "Type" : "STACK",
+        "Filter": "org-level-trail-with-mgmt-events"
+    },
+    {
+        "Type" : "S3_BUCKET",
+        "Filter": "sra-cloudtrail-staging-"
+    },
+    {
+        "Type" : "S3_BUCKET",
+        "Filter": "sra-org-trail-logs-",
+        "Account": "log_account"
+    },
+    {
+        "Type": "S3_BUCKET",
+        "Filter": "cfn-abi-aws-cloudtrail-"
+    },
+    {
+        "Type" : "SSM_PARAMETER",
+        "Filter" : "/sra/ctrail/"
     },
     {
         "Type" : "LOG_GROUP",
-        "Filter" : "path/to/log-group-prefix-to-delete"
+        "Filter" : "sra/sra-org-trail"
     }
 ]
