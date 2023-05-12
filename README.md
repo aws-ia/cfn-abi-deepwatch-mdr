@@ -1,6 +1,6 @@
 # Deepwatch Amazon Built In Architecture Overview
 
-<img width="600" height="300" src="images/overview-architecture.jpg" alt="Overview Architecture">
+<img width="742" height="751" src="images/overview-architecture.jpg" alt="Overview Architecture">
 
 This solution utilizes CloudFormation to deploy three solutions as one:
 
