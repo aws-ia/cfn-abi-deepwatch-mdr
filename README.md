@@ -1,4 +1,6 @@
-# Deepwatch Amazon Built In Architecture Overview
+# Deepwatch Amazon Built In Module 
+
+## Overview
 
 <img width="742" height="751" src="images/overview-architecture.jpg" alt="Overview Architecture">
 
@@ -41,3 +43,34 @@ To deploy the CloudFormation stack using the AWS CLI follow these steps:
    The stack status will be returned in the output.
 
 Once the stack has finished deploying, you can access the resources created by the stack via the AWS Management Console or the AWS CLI.
+
+## Deepwatch StackSet Resources 
+
+[diagram here]
+
+The Deepwatch CloudFormation StackSet creates several AWS resources:
+
+- `GuardDutyQueue`: an SQS queue that receives events for preprocessing.
+- `GuardDutyQueuePolicy`: an SQS queue policy that grants permissions to access the preprocessing queue.
+- `GuardDutyDeadLetterQueue`: an SQS queue that acts as a dead-letter queue for a preprocessing queue.
+- `GuardDutyDeadLetterQueuePolicy`: an SQS queue policy that grants permissions to access the dead-letter queue for the preprocessing queue.
+- `ControlTowerSNSTopic`: an SNS topic that sends notifications about events to the preprocessing queue.
+- `ControlTowerPreProcessedQueue`: an SQS queue that receives events for preprocessing.
+- `ControlTowerPreProcessedQueuePolicy`: an SQS queue policy that grants permissions to access the preprocessing queue.
+- `ControlTowerPreProcessedDeadLetterQueue`: an SQS queue that acts as a dead-letter queue for a preprocessing queue.
+- `ControlTowerPreProcessedDeadLetterQueuePolicy`: an SQS queue policy that grants permissions to access the dead-letter queue for the preprocessing queue.
+- `ControlTowerPreProcessedLambdaFunction`: a lambda function that is triggered by message arrival to the ControlTowerPreProcessedQueue to process CloudTrail logs.
+- `CloudTrailQueue`: an SQS queue that receives CloudTrail events.
+- `CloudTrailQueuePolicy`: an SQS queue policy that grants permissions to access the CloudTrail queue.
+- `CloudTrailDeadLetterQueue`: an SQS queue that acts as a dead-letter queue for the CloudTrailQueue.
+- `CloudTrailDeadLetterQueuePolicy`: an SQS queue policy that grants permissions to access the dead-letter queue for the CloudTrail queue.
+
+Additionally there is a custom resource that will place an event notification configuration on the GuardDuty and CloudTrail buckets to forward all new objectcreate events to the respective SQS queue/SNS Topic.
+
+## Post-Deployment Steps
+
+Following the deployment of the solution, please provide your Deepwatch engineer with the following outputs from the Deepwatch template:
+
+- `oCloudTrailQueueArn`
+- `oGuardDutyQueueArn`
+- `oDeepwatchRoleArn`
