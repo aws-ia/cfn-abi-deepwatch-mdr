@@ -9,6 +9,10 @@
         "Filter" : "cfn-abi-amazon-guardduty-"
     },
     {
+        "Type" : "S3_BUCKET",
+        "Filter" : "sra-gd-staging-"
+    },
+    {
         "Type" : "SSM_PARAMETER",
         "Filter" : "/sra/gd/"
     },
