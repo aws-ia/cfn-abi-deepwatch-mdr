@@ -46,7 +46,7 @@ Once the stack has finished deploying, you can access the resources created by t
 
 ## Deepwatch StackSet Resources 
 
-[diagram here]
+<img width="1081" height="801" src="images/resources-architecture.jpg" alt="Resources Architecture">
 
 The Deepwatch CloudFormation StackSet creates several AWS resources:
 
