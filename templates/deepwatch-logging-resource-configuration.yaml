@@ -1,0 +1,699 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Template that creates all of the resources needed in the logarchive account to
+  begin Deepwatch ingestion of logs via SQS-based-s3 ingestion
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: General Properties
+        Parameters:
+          - pControlTowerBucketName
+          - pGuardDutyBucketName
+          - pGuardDutyQueueName
+          - pCloudTrailQueueName
+          - pDeepwatchRoleName
+
+    ParameterLabels:
+      pControlTowerBucketName:
+        default: The bucket where CloudTrail logs are stored
+      pGuardDutyBucketName:
+        default: The bucket where GuardDuty logs are stored
+      pCloudTrailQueueName:
+        default: The queue where CloudTrail log notifications go
+      pGuardDutyQueueName:
+        default: The queue where GuardDuty log notifications go
+      pDeepwatchRoleName:
+        default: The name given to the Deepwatch IAM role & policy
+
+Parameters:
+  pGuardDutyBucketName:
+    Type: String
+    Description: S3 bucket that store GuardDuty logs.
+    AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
+    ConstraintDescription:
+      Must be alphanumeric or special characters [., _, -]. In addition, the slash character ( / ) used to delineate hierarchies in parameter names.
+  pControlTowerBucketName:
+    Type: String
+    Description: S3 bucket that stores ControlTower logs.
+    AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
+    ConstraintDescription:
+      Must be alphanumeric or special characters [., _, -]. In addition, the slash character ( / ) used to delineate hierarchies in parameter names.
+  pGuardDutyQueueName:
+    AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
+    ConstraintDescription:
+      Must be alphanumeric or special characters [., _, -]. In addition, the slash character ( / ) used to delineate hierarchies in parameter names.
+    Default: deepwatch-guardduty-queue
+    Description:
+      The SQS queue that deepwatch will be monitoring for new GuardDuty log arrival
+    Type: String
+  pCloudTrailQueueName:
+    AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
+    ConstraintDescription:
+      Must be alphanumeric or special characters [., _, -]. In addition, the slash character ( / ) used to delineate hierarchies in parameter names.
+    Default: deepwatch-cloudtrail-queue
+    Description:
+      The SQS queue that deepwatch will be monitoring for new CloudTrail log arrival
+    Type: String
+  pDeepwatchRoleName:
+    AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
+    ConstraintDescription: 'Must be alphanumeric or special characters [., _, -].'
+    Default: deepwatch-mdr-role
+    Description: The name of the role that will be created to provide access to ingest logs
+    Type: String
+
+Resources:
+  rGuardDutyDeadLetterQueue:
+    Type: 'AWS::SQS::Queue'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W48
+            reason: SNS topics cannot use Amazon-managed SSE keys, KMS keys have caused issues for us in the past
+      checkov:
+        skip:
+          - id: CKV_AWS_27
+            comment: SQS queues are encrypted via the 'SqsManagedSseEnabled' property being set to 'True'
+    Properties:
+      QueueName: !Sub '${pGuardDutyQueueName}-dlq'
+      VisibilityTimeout: 30
+      SqsManagedSseEnabled: True
+
+  rGuardDutyDeadLetterQueuePolicy:
+    Type: 'AWS::SQS::QueuePolicy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'sqs:*'
+            Effect: Allow
+            Resource: !GetAtt 
+              - rGuardDutyDeadLetterQueue
+              - Arn
+            Principal:
+              AWS:
+                - !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+      Queues:
+        - !Ref rGuardDutyDeadLetterQueue
+  
+  rGuardDutyQueue:
+    Type: 'AWS::SQS::Queue'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W48
+            reason: SNS topics cannot use Amazon-managed SSE keys, KMS keys have caused issues for us in the past
+      checkov:
+        skip:
+          - id: CKV_AWS_27
+            comment: SQS queues are encrypted via the 'SqsManagedSseEnabled' property being set to 'True'
+    Properties:
+      QueueName: !Ref pGuardDutyQueueName
+      VisibilityTimeout: 300
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt 
+          - rGuardDutyDeadLetterQueue
+          - Arn
+        maxReceiveCount: 5
+      SqsManagedSseEnabled: True
+  
+  rGuardDutyQueuePolicy:
+    Type: 'AWS::SQS::QueuePolicy'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: F21
+            reason: The condition alleviates any security risk by checking for a specific principal
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'sqs:SendMessage'
+            Effect: Allow
+            Resource: !GetAtt 
+              - rGuardDutyQueue
+              - Arn
+            Principal: '*'
+            Condition:
+              ArnEquals:
+                'aws:Sourcearn': !Sub 'arn:aws:s3:::${pGuardDutyBucketName}'
+      Queues:
+        - !Ref rGuardDutyQueue
+
+  rCloudTrailDeadLetterQueue:
+    Type: 'AWS::SQS::Queue'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W48
+            reason: SNS topics cannot use Amazon-managed SSE keys, KMS keys have caused issues for us in the past
+      checkov:
+        skip:
+          - id: CKV_AWS_27
+            comment: SQS queues are encrypted via the 'SqsManagedSseEnabled' property being set to 'True'
+    Properties:
+      QueueName: !Sub '${pCloudTrailQueueName}-dlq'
+      VisibilityTimeout: 30
+      SqsManagedSseEnabled: True
+
+  rCloudTrailDeadLetterQueuePolicy:
+    Type: 'AWS::SQS::QueuePolicy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'sqs:*'
+            Effect: Allow
+            Resource: !GetAtt 
+              - rCloudTrailDeadLetterQueue
+              - Arn
+            Principal:
+              AWS:
+                - !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+      Queues:
+        - !Ref rCloudTrailDeadLetterQueue
+
+  rCloudTrailQueue:
+    Type: 'AWS::SQS::Queue'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W48
+            reason: SNS topics cannot use Amazon-managed SSE keys, KMS keys have caused issues for us in the past
+      checkov:
+        skip:
+          - id: CKV_AWS_27
+            comment: SQS queues are encrypted via the 'SqsManagedSseEnabled' property being set to 'True'
+    Properties:
+      QueueName: !Ref pCloudTrailQueueName
+      VisibilityTimeout: 300
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt 
+          - rCloudTrailDeadLetterQueue
+          - Arn
+        maxReceiveCount: 5
+      SqsManagedSseEnabled: True
+
+  rCloudTrailQueuePolicy:
+    Type: 'AWS::SQS::QueuePolicy'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: F21
+            reason: The condition alleviates any security risk by checking for a specific principal
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: 'sqs:SendMessage'
+            Effect: Allow
+            Resource: !GetAtt 
+              - rCloudTrailQueue
+              - Arn
+            Principal: '*'
+            Condition:
+              ArnEquals:
+                'aws:Sourcearn': !Sub 'arn:aws:s3:::${pControlTowerBucketName}'
+      Queues:
+        - !Ref rCloudTrailQueue
+
+  rControlTowerPreProcessedDeadLetterQueue:
+    Type: 'AWS::SQS::Queue'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W48
+            reason: SNS topics cannot use Amazon-managed SSE keys, KMS keys have caused issues for us in the past
+      checkov:
+        skip:
+          - id: CKV_AWS_27
+            comment: SQS queues are encrypted via the 'SqsManagedSseEnabled' property being set to 'True'
+    Properties:
+      QueueName: !Sub '${pControlTowerBucketName}-preproc-dlq'
+      VisibilityTimeout: 30
+      SqsManagedSseEnabled: True
+
+  rControlTowerPreProcessedDeadLetterQueuePolicy:
+    Type: 'AWS::SQS::QueuePolicy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'sqs:*'
+            Effect: Allow
+            Resource: !GetAtt 
+              - rControlTowerPreProcessedDeadLetterQueue
+              - Arn
+            Principal:
+              AWS:
+                - !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+      Queues:
+        - !Ref rControlTowerPreProcessedDeadLetterQueue
+
+  rControlTowerPreProcessedQueue:
+    Type: 'AWS::SQS::Queue'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W48
+            reason: SNS topics cannot use Amazon-managed SSE keys, KMS keys have caused issues for us in the past
+      checkov:
+        skip:
+          - id: CKV_AWS_27
+            comment: SQS queues are encrypted via the 'SqsManagedSseEnabled' property being set to 'True'
+    Properties:
+      QueueName: !Sub '${pControlTowerBucketName}-preproc'
+      VisibilityTimeout: 300
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt 
+          - rControlTowerPreProcessedDeadLetterQueue
+          - Arn
+        maxReceiveCount: 5
+      SqsManagedSseEnabled: True
+
+  rControlTowerPreProcessedQueuePolicy:
+    Type: 'AWS::SQS::QueuePolicy'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: F21
+            reason: The condition alleviates any security risk by checking for a specific principal
+    Properties:
+      PolicyDocument:
+        Statement:
+          - 
+            Action: 'sqs:SendMessage'
+            Effect: Allow
+            Resource: !GetAtt 
+              - rControlTowerPreProcessedQueue
+              - Arn
+            Principal: '*'
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Ref rControlTowerSNSTopic
+          - 
+            Action: 'sqs:*'
+            Effect: Allow
+            Resource: !GetAtt 
+              - rControlTowerPreProcessedQueue
+              - Arn
+            Principal: 
+              AWS:
+                !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+      Queues:
+        - !Ref rControlTowerPreProcessedQueue
+
+  rControlTowerSNSTopic:
+    Type: 'AWS::SNS::Topic'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W47
+            reason: SNS topics cannot use Amazon-managed SSE keys, KMS keys have caused issues for us in the past
+      checkov:
+        skip:
+          - id: CKV_AWS_26
+            comment: SNS topics cannot use Amazon-managed SSE keys, KMS keys have caused issues for us in the past
+    Properties:      
+      TopicName: 'deepwatch-controltowerlogs-preprocessed'
+
+  rControlTowerSNSTopicPolicy:
+    Type: 'AWS::SNS::TopicPolicy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: 'SNS:Publish'
+            Effect: Allow
+            Resource: !Ref rControlTowerSNSTopic
+            Principal: 
+              Service: 's3.amazonaws.com'
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Sub 'arn:aws:s3:::${pControlTowerBucketName}'
+      Topics:
+        - !Ref rControlTowerSNSTopic
+
+  rControlTowerSNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref rControlTowerSNSTopic
+      Endpoint: !GetAtt rControlTowerPreProcessedQueue.Arn
+      Protocol: sqs
+      RawMessageDelivery: true
+
+  rControlTowerPreProcessedLambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W58
+            reason: Lambda role provides access to CloudWatch Logs
+          - id: W89
+            reason: Lambda does not need to communicate with VPC resources.
+          - id: W92
+            reason: Lambda does not need reserved concurrent executions.
+      checkov:
+        skip:
+          - id: CKV_AWS_115
+            comment: Lambda does not need reserved concurrent executions.
+          - id: CKV_AWS_116
+            comment: DLQ not needed, as Lambda function only triggered by CloudFormation events.
+          - id: CKV_AWS_117
+            comment: Lambda does not need to communicate with VPC resources.
+          - id: CKV_AWS_173
+            comment: Environment variables are not sensitive.
+    Properties:
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import os
+          
+          def lambda_handler(event, context):
+              sqs_client=boto3.client('sqs')
+              sqs_records=event["Records"]
+          
+              for record in sqs_records:
+                  body=json.loads(record['body'])
+                  s3_objects=body["Records"]
+          
+                  for object in s3_objects:
+                      object_key=object["s3"]["object"]["key"]
+                      
+                      log_type=object_key.split('/')
+          
+                      if (log_type[3] == "CloudTrail"):
+                          print('Forwarding logs to queue for Deepwatch consumption')
+                          sqs_queue_url = os.environ['cloudtrail_queue_url']
+                          sqs_client.send_message(QueueUrl=sqs_queue_url, MessageBody=(json.dumps(body)))
+                      else:
+                          print('Did not recognize log type as a valid log ingested by the Deepwatch solution.')
+
+      Handler: index.lambda_handler
+      Role: !GetAtt 
+        - rControlTowerPreProcessedLambdaIAMRole
+        - Arn
+      Runtime: python3.9
+      Timeout: 5
+      Environment:
+        Variables:
+          cloudtrail_queue_url: !Ref rCloudTrailQueue
+
+  rControlTowerPreProcessedLambdaIAMRole:
+    Type: 'AWS::IAM::Role'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W11
+            reason: Wildcards with list actions are necessary, as well as with unknown loggroup naming
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: ControlTowerPreProcessedLambdaIAMRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'SQS:ReceiveMessage'
+                  - 'SQS:DeleteMessage'
+                  - 'SQS:GetQueueAttributes'
+                  - 'SQS:ChangeMessageVisibility'
+                Resource: !GetAtt 
+                  - rControlTowerPreProcessedQueue
+                  - Arn
+              - Effect: Allow
+                Action:
+                  - 'SQS:ReceiveMessage'
+                  - 'SQS:DeleteMessage'
+                  - 'SQS:GetQueueAttributes'
+                  - 'SQS:SendMessage'
+                  - 'SQS:SendMessageBatch'
+                Resource: !GetAtt 
+                  - rCloudTrailQueue
+                  - Arn
+              - Effect: Allow
+                Action: 'SQS:ListQueues'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
+
+  rControlTowerPreProcessedLambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt 
+        - rControlTowerPreProcessedLambdaFunction
+        - Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+      SourceArn: !Sub 'arn:aws:sqs:::${rControlTowerPreProcessedQueue}'
+
+  rControlTowerPreProcessedLambdaFunctionEventSourceMapping:
+    Type: 'AWS::Lambda::EventSourceMapping'
+    Properties:
+      BatchSize: 10
+      Enabled: true
+      EventSourceArn: !GetAtt 
+        - rControlTowerPreProcessedQueue
+        - Arn
+      FunctionName: !GetAtt 
+        - rControlTowerPreProcessedLambdaFunction
+        - Arn
+
+  rCustomResourceLambdaIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: CustomResourceLambdaIAMRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetBucketNotification'
+                  - 's3:PutBucketNotification'
+                Resource: 
+                  - !Sub 'arn:aws:s3:::${pGuardDutyBucketName}'
+                  - !Sub 'arn:aws:s3:::${pControlTowerBucketName}'
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
+
+  rCustomResourceLambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W58
+            reason: Lambda role provides access to CloudWatch Logs
+          - id: W89
+            reason: Lambda does not need to communicate with VPC resources.
+          - id: W92
+            reason: Lambda does not need reserved concurrent executions.
+      checkov:
+        skip:
+          - id: CKV_AWS_115
+            comment: Lambda does not need reserved concurrent executions.
+          - id: CKV_AWS_116
+            comment: DLQ not needed, as Lambda function only triggered by CloudFormation events.
+          - id: CKV_AWS_117
+            comment: Lambda does not need to communicate with VPC resources.
+          - id: CKV_AWS_173
+            comment: Environment variables are not sensitive.
+    Properties:
+      Handler: index.lambda_handler
+      Role: !GetAtt 
+        - rCustomResourceLambdaIAMRole
+        - Arn
+      Code:
+        ZipFile: |
+
+          from __future__ import print_function
+          import json
+          import boto3
+          import cfnresponse
+
+          SUCCESS = "SUCCESS"
+          FAILED = "FAILED"
+
+          print('Loading function')
+          s3 = boto3.resource('s3')
+
+          def lambda_handler(event, context):
+              print("Received event: " + json.dumps(event, indent=2))
+              responseData={}
+              try:
+                  if event['RequestType'] == 'Delete':
+                      print("Request Type:",event['RequestType'])
+                      GuardDutyBucket=event['ResourceProperties']['GuardDutyBucket']
+                      ControlTowerBucket=event['ResourceProperties']['ControlTowerBucket']
+                      delete_notification(GuardDutyBucket)
+                      delete_notification(ControlTowerBucket)
+                      responseData={'GuardDutyBucket':GuardDutyBucket,'ControlTowerBucket':ControlTowerBucket}
+                      print("Sending response to custom resource after Delete")
+                  elif event['RequestType'] == 'Create' or event['RequestType'] == 'Update':
+                      print("Request Type:",event['RequestType'])
+                      GuardDutyQueueArn=event['ResourceProperties']['GuardDutyQueueArn']
+                      ControlTowerSNSTopicArn=event['ResourceProperties']['ControlTowerSNSTopicArn']
+                      GuardDutyBucket=event['ResourceProperties']['GuardDutyBucket']
+                      ControlTowerBucket=event['ResourceProperties']['ControlTowerBucket']
+                      add_notification(GuardDutyQueueArn, GuardDutyBucket, 'SQS')
+                      add_notification(ControlTowerSNSTopicArn, ControlTowerBucket, 'SNS')
+                      responseData={'GuardDutyBucket':GuardDutyBucket,'ControlTowerBucket':ControlTowerBucket}
+                      print("Sending response to custom resource")
+                  responseStatus = 'SUCCESS'
+              except Exception as e:
+                  print('Failed to process:', e)
+                  responseStatus = 'FAILED'
+                  responseData = {'Failure': 'Something bad happened.'}
+              cfnresponse.send(event, context, responseStatus, responseData)
+
+          def add_notification(DestinationArn, Bucket, DestinationType):
+              if DestinationType == 'SQS':              
+                  bucket_notification = s3.BucketNotification(Bucket)
+                  response = bucket_notification.put(
+                    NotificationConfiguration={
+                      'QueueConfigurations': [
+                        {
+                            'Id': 'deepwatch-logs-notification',
+                            'QueueArn': DestinationArn,
+                            'Events': [
+                                's3:ObjectCreated:*'
+                            ]
+                        }
+                      ]
+                    }
+                  )
+              elif DestinationType == "SNS":
+                  bucket_notification = s3.BucketNotification(Bucket)
+                  response = bucket_notification.put(
+                    NotificationConfiguration={
+                      'TopicConfigurations': [
+                        {
+                            'Id': 'deepwatch-logs-notification',
+                            'TopicArn': DestinationArn,
+                            'Events': [
+                                's3:ObjectCreated:*'
+                            ]
+                        }
+                      ]
+                    }
+                  )
+            
+          def delete_notification(Bucket):
+              bucket_notification = s3.BucketNotification(Bucket)
+              response = bucket_notification.put(
+                  NotificationConfiguration={}
+              )
+              print("Delete request completed....")
+      Runtime: python3.9
+      Timeout: 50
+
+  rLambdaTrigger:
+    Type: 'Custom::LambdaTrigger'
+    Properties:
+      ServiceToken: !GetAtt 
+        - rCustomResourceLambdaFunction
+        - Arn
+      GuardDutyQueueArn: !GetAtt 
+        - rGuardDutyQueue
+        - Arn
+      ControlTowerSNSTopicArn: !Ref rControlTowerSNSTopic
+      GuardDutyBucket: !Ref pGuardDutyBucketName
+      ControlTowerBucket: !Ref pControlTowerBucketName
+
+  rDeepwatchPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: This resource should not be replacable. The name is set by the user in the root stack.
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'sqs:GetQueueAttributes'
+              - 'sqs:ListQueues'
+              - 'sqs:ReceiveMessage'
+              - 'sqs:GetQueueUrl'
+              - 'sqs:SendMessage'
+              - 'sqs:DeleteMessage'              
+            Resource:
+              - !GetAtt [rCloudTrailQueue, Arn]
+              - !GetAtt [rGuardDutyQueue, Arn]
+          - Effect: Allow
+            Action:
+              - 's3:ListBucket'
+              - 's3:GetObject'
+              - 's3:GetBucketLocation'
+              - 's3:ListAllMyBuckets'
+              - 's3:GetBucketTagging'
+              - 's3:GetAccelerateConfiguration'
+              - 's3:GetBucketLogging'
+              - 's3:GetLifecycleConfiguration'
+              - 's3:GetBucketCORS'
+            Resource:
+              - !Sub 'arn:aws:s3:::${pGuardDutyBucketName}'
+              - !Sub 'arn:aws:s3:::${pControlTowerBucketName}'
+      ManagedPolicyName: !Ref pDeepwatchRoleName
+
+  rDeepwatchRole:
+    Type: 'AWS::IAM::Role'
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: This resource should not be replacable. The name is set by the user in the root stack.
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: 'arn:aws:iam::975402726461:role/deepwatch-temp-role'
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - !Ref rDeepwatchPolicy
+      Path: /
+      RoleName: !Ref pDeepwatchRoleName
+
+Outputs:
+  oCloudTrailQueueArn:
+    Description: The Arn of the SQS queue for CloudTrail log ingestion, supply to Deepwatch onboarding engineer
+    Value: !GetAtt [rCloudTrailQueue, Arn]
+  oGuardDutyQueueArn:
+    Description: The Arn of the SQS queue for GuardDuty log ingestion, supply to Deepwatch onboarding engineer
+    Value: !GetAtt [rGuardDutyQueue, Arn]
+  oDeepwatchRoleArn:
+    Description: The Arn of the IAM Role for Deepwatch log ingestion, supply to Deepwatch onboarding engineer
+    Value: !GetAtt [rDeepwatchRole, Arn]
