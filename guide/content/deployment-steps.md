@@ -8,15 +8,19 @@ description: Deployment steps
 ## Launch the CloudFormation Template in the Management Account
 
 
-1. Download the cloudformation template from source: https://<abi-template-location>
+1. Download the cloudformation template from source: https://github.com/aws-ia/cfn-abi-deepwatch-mdr
 2. Launch CloudFormation template in your AWS Control Tower home region.
-    * Stack name: `template-<partner-name>-enable-integrations`
+    * Stack name: `template-deepwatch-enable-integrations`
     * List Parameters with [call out default values and update below example as needed]
-        * **EnableIntegrationsStackName**: `template-<partner-name>-enable-integrations`
-        * **EnableIntegrationsStackRegion**: `us-east-1`
-        * **EnableIntegrationsStackSetAdminRoleName**: `AWSCloudFormationStackSetAdministrationRole`
-        * **EnableIntegrationsStackSetExecutionRoleName**: `AWSCloudFormationStackSetExecutionRole`
-        * **EnableIntegrationsStackSetExecutionRoleArn**: `arn:aws:iam::<account-id>:role/AWSCloudFormationStackSetExecutionRole`
+        * **pDeepwatchRoleName**: `deepwatch-mdr-role`
+        * **pSraTestingFlag**: `false`
+        * **pSRASolutionName**: `sra-guardduty-org`
+        * **pAutoEnableMalwareProtection**: `false`
+        * **pAutoEnableK8sLogs**: `false`
+        * **pAutoEnableS3Logs**: `true`
+        * **pSRAS3BucketRegion**: `true`
+        * **pSRASourceS3BucketName**: `aws-abi-pilot`
+        * **pSRAStagingS3KeyPrefix**: `cfn-abi-deepwatch-mdr`
 
 3. Choose both the **Capabilities** and select **Submit** to launch the stack.
 

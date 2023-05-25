@@ -6,13 +6,13 @@ description: Additional Resources
 
 ## Partner documentation
 
-* Reference-1
-* Reference-2
+* [Deepwatch](https://www.deepwatch.com/)
 
 ## AWS Services
 
-* Reference-1
-* Reference-2
+* [Deepwatch MDR ABI](https://github.com/aws-ia/cfn-abi-deepwatch-mdr)
+* [AWS SRA GuardDuty](https://github.com/aws-ia/cfn-abi-amazon-guardduty)
+* [AWS SRA CloudTrail](https://github.com/aws-ia/cfn-abi-aws-cloudtrail)
 
 ## Frequently asked questions (FAQs)
 

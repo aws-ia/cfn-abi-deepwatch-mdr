@@ -6,9 +6,9 @@ description:
 
 This ABI package provides one deployment option:
 
-* [Deploy [[Partner Name-Product Name]] for AWS Organizations](quick-link)
+* [Deploy [[Deepwatch MDR]] for AWS Organizations](quick-link)
 
-This option builds <>.
+This option builds all of the CloudTrail, GuardDuty and supporting resources needed to begin ingestion of AWS security logs in to the Deepwatch MDR platform. During the deployment you can choose what sort of options to enable within the indidivual services.
 
 
 #### Deployment options supported by this ABI package

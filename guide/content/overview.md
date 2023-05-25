@@ -5,7 +5,7 @@ description:
 ---
 
 
-This ABI deploys <Partner project name> Integrations for AWS Organizations on the AWS Cloud. It’s for <persona-1> and <persona-2> that want to provide <partner-product-functionality> across multiple AWS accounts. If you are unfamiliar with AWS Built In, refer to the [AWS Built in](https://aws.amazon.com/builtin).
+This ABI deploys cfn-abi-deepwatch-mdr Integrations for AWS Organizations on the AWS Cloud. It’s for Deepwatch customers using AWS CloudTrail and Deepwatch customers using GuardDuty that want to provide all of the necessary resources and steps to begin ingestion of log sources for these use cases with their Deepwatch MDR servic across multiple AWS accounts. If you are unfamiliar with AWS Built In, refer to the [AWS Built in](https://aws.amazon.com/builtin).
 
 Deploying this ABI package does not guarantee an organization’s compliance with any laws, certifications, policies, or other regulations.
 
