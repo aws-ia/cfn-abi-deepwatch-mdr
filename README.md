@@ -10,7 +10,7 @@ This solution utilizes CloudFormation to deploy three solutions as one:
 - Solution B: A CloudFormation Nested Stack that enables GuardDuty for all existing AWS accounts in an AWS Organization and turns on the Auto-Enable feature for future accounts. The solution allows you to choose the regions in which to enable GuardDuty and delegates the GuardDuty administrator role to the organization's Audit account. It creates an S3 bucket in the logging account to collect aggregated findings from all accounts and assigns a lifecycle policy to transition data to Glacier storage after 365 days. The solution also enables GuardDuty S3 and EKS protection by default. 
 - Solution C: A StackSet in the logging account account where the previous solutions were configured to store logs to and sets ups all of the resources required to begin ingesting those logs to the Deepwatch Managed Detection & Response platform, including all necessary Lambdas, SNS Topics, SQS Queues, S3 Event Notifications, and IAM Roles & Policies. The outputs of this StackSet are all that is needed to finish setting up ingestion of your organizations CloudTrail and GuardDuty logs.
 
-## Getting Started
+## Deployment Steps
 
 To deploy this CloudFormation Stack via the AWS Console follow these steps:
 
@@ -34,7 +34,9 @@ To deploy the CloudFormation stack using the AWS CLI follow these steps:
 
    Be sure to replace `<YOUR_STACK_NAME>`, `<PARAMETER_NAME>`, and `<PARAMETER_VALUE>` with your desired values for the stack name and parameters.
 
-5. Wait for the stack to finish deploying. You can check the status of the deployment by running the following command:
+## Post-Deployment Steps
+
+Wait for the stack to finish deploying. You can check the status of the deployment by running the following command:
 
    ```
    aws cloudformation describe-stacks --stack-name <YOUR_STACK_NAME>
@@ -44,7 +46,13 @@ To deploy the CloudFormation stack using the AWS CLI follow these steps:
 
 Once the stack has finished deploying, you can access the resources created by the stack via the AWS Management Console or the AWS CLI.
 
-## Deepwatch StackSet Resources 
+Following the deployment of the solution, please provide your Deepwatch engineer with the following outputs from the Deepwatch template:
+
+- `oCloudTrailQueueArn`
+- `oGuardDutyQueueArn`
+- `oDeepwatchRoleArn`
+
+## Architecture 
 
 <img width="1081" height="801" src="images/resources-architecture.jpg" alt="Resources Architecture">
 
@@ -67,10 +75,3 @@ The Deepwatch CloudFormation StackSet creates several AWS resources:
 
 Additionally there is a custom resource that will place an event notification configuration on the GuardDuty and CloudTrail buckets to forward all new objectcreate events to the respective SQS queue/SNS Topic.
 
-## Post-Deployment Steps
-
-Following the deployment of the solution, please provide your Deepwatch engineer with the following outputs from the Deepwatch template:
-
-- `oCloudTrailQueueArn`
-- `oGuardDutyQueueArn`
-- `oDeepwatchRoleArn`
