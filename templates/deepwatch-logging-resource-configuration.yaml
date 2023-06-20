@@ -91,9 +91,10 @@ Resources:
             Resource: !GetAtt 
               - rGuardDutyDeadLetterQueue
               - Arn
-            Principal:
-              AWS:
-                - !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Principal: '*'
+            Condition:
+              ArnEquals:
+                'aws:Sourcearn': !Sub 'arn:aws:s3:::${pGuardDutyBucketName}'
       Queues:
         - !Ref rGuardDutyDeadLetterQueue
   
@@ -168,9 +169,10 @@ Resources:
             Resource: !GetAtt 
               - rCloudTrailDeadLetterQueue
               - Arn
-            Principal:
-              AWS:
-                - !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Principal: '*'
+            Condition:
+              ArnEquals:
+                'aws:Sourcearn': !Sub 'arn:aws:s3:::${pGuardDutyBucketName}'
       Queues:
         - !Ref rCloudTrailDeadLetterQueue
 
@@ -244,9 +246,10 @@ Resources:
             Resource: !GetAtt 
               - rControlTowerPreProcessedDeadLetterQueue
               - Arn
-            Principal:
-              AWS:
-                - !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Principal: '*'
+            Condition:
+              ArnEquals:
+                'aws:Sourcearn': !Sub 'arn:aws:s3:::${pGuardDutyBucketName}'
       Queues:
         - !Ref rControlTowerPreProcessedDeadLetterQueue
 
