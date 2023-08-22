@@ -6,72 +6,34 @@ Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
       - Label:
-          default: Source location details
-        Parameters:
-          - pSRAStagingS3KeyPrefix
-          - pSRASourceS3BucketName
-          - pSRAS3BucketRegion
-      - Label:
           default: General Properties
         Parameters:
-          - pSRASolutionName
-          - pSRAStagingS3KeyPrefix
-          - pSRAS3BucketRegion
           - pDeepwatchRoleName
-      - Label:
-          default: Testing Properties
-        Parameters:
-          - pSraTestingFlag
       - Label:
           default: GuardDuty Configuration Properties
         Parameters:
           - pAutoEnableS3Logs
           - pAutoEnableK8sLogs
           - pAutoEnableMalwareProtection
+      - Label:
+          default: CloudTrail Configuration Properties
+        Parameters:
+          - pEnableLambdaDataEvents
+          - pEnableS3DataEvents
     ParameterLabels:
-      pSRAStagingS3KeyPrefix:
-        default: SRA Staging S3 Bucket Name Prefix
-      pSRASourceS3BucketName:
-        default: SRA Source S3 Location
-      pSRAS3BucketRegion:
-        default: SRA Bucket Region
       pAutoEnableS3Logs:
         default: Auto Enable S3 Logs
       pAutoEnableK8sLogs:
         default: Auto Enable kubernetes Logs
       pAutoEnableMalwareProtection:
         default: Auto Enable malware protection
-      pSRASolutionName:
-        default: SRA Solution Name
-      pSraTestingFlag:
-        default: Testing Flag for SRA
       pDeepwatchRoleName:
         default: IAM Role name for Deepwatch solution access
+      pEnableLambdaDataEvents:
+        default: Enable Cloud Trail Data Events for all Lambda functions
+      pEnableS3DataEvents:
+        default: Enable Cloud Trail S3 Data Events for all buckets
 Parameters:
-  pSRAStagingS3KeyPrefix:
-    AllowedValues:
-      - cfn-abi-deepwatch-mdr
-    Default: cfn-abi-deepwatch-mdr
-    Description: >-
-      SRA Staging S3 bucket name prefix for the SRA artifacts relevant to the
-      solutions. (e.g., lambda zips, CloudFormation templates). The account and
-      region are added to the prefix <bucket-name-prefix>-<account-id>-<region>.
-      Example = sra-staging-123456789012-us-east-1.
-    Type: String
-  pSRASourceS3BucketName:
-    AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
-    ConstraintDescription: >-
-      Must be alphanumeric or special characters [., _, -]. In addition, the
-      slash character ( / ) used to delineate hierarchies in parameter names.
-    Default: aws-abi-pilot
-    Description: >-
-      Source bucket for all templates and artefacts that will get copied into
-      staging bucket
-    Type: String
-  pSRAS3BucketRegion:
-    AllowedPattern: '^[a-z][a-z]-[a-z]*-[0-9]*$'
-    Type: String
-    Default: us-east-1
   pAutoEnableS3Logs:
     AllowedValues:
       - 'true'
@@ -93,47 +55,41 @@ Parameters:
     Default: 'false'
     Description: Auto Enable malware protection
     Type: String
-  pSRASolutionName:
-    AllowedValues:
-      - sra-guardduty-org
-    Default: sra-guardduty-org
-    Description: >-
-      The SRA solution name. The default value is the folder name of the
-      solution
-    Type: String
-  pSraTestingFlag:
-    AllowedValues:
-      - 'true'
-      - 'false'
-    Default: 'false'
-    Type: String
   pDeepwatchRoleName:
     AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
     ConstraintDescription: 'Must be alphanumeric or special characters [., _, -].'
     Default: deepwatch-mdr-role
     Description: The name of the role that will be created to provide access to ingest logs
     Type: String
+  pEnableLambdaDataEvents:
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+    Description: Enable Cloud Trail Data Events for all Lambda functions
+    Type: String
+  pEnableS3DataEvents:
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+    Description: Enable Cloud Trail S3 Data Events for all buckets
+    Type: String
 Resources:
   CloudTrailStack:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       TemplateURL: !Sub >-
-        https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/${pSRAStagingS3KeyPrefix}/submodules/cfn-abi-aws-cloudtrail/templates/sra-cloudtrail-enable-in-org-ssm.yaml
+        https://aws-abi-pilot.s3.us-east-1.${AWS::URLSuffix}/cfn-abi-deepwatch-mdr/submodules/cfn-abi-aws-cloudtrail/templates/sra-cloudtrail-enable-in-org-ssm.yaml
       Parameters:
-        pSRAS3BucketRegion: !Ref pSRAS3BucketRegion
         pEnableDataEventsOnly: false
+        pEnableS3DataEvents: !Ref pEnableS3DataEvents
+        pEnableLambdaDataEvents: !Ref pEnableLambdaDataEvents
   GuardDutyStack:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       TemplateURL: !Sub >-
-        https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/${pSRAStagingS3KeyPrefix}/submodules/cfn-abi-amazon-guardduty/templates/sra-guardduty-enable-in-org-ssm.yaml
+        https://aws-abi-pilot.s3.us-east-1.${AWS::URLSuffix}/cfn-abi-deepwatch-mdr/submodules/cfn-abi-amazon-guardduty/templates/sra-guardduty-enable-in-org-ssm.yaml
       Parameters:
         pAutoEnableS3Logs: !Ref pAutoEnableS3Logs
         pAutoEnableK8sLogs: !Ref pAutoEnableK8sLogs
         pAutoEnableMalwareProtection: !Ref pAutoEnableMalwareProtection
-        pSRASolutionName: !Ref pSRASolutionName
-        pSraTestingFlag: !Ref pSraTestingFlag
-        pSRAS3BucketRegion: !Ref pSRAS3BucketRegion        
   DeepwatchResourceConfigurationStack:
     Type: AWS::CloudFormation::StackSet
     Properties:
@@ -158,7 +114,7 @@ Resources:
           Regions:
             - !Ref AWS::Region
       TemplateURL: !Sub >-
-        https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/${pSRAStagingS3KeyPrefix}/templates/deepwatch-logging-resource-configuration.yaml
+        https://aws-abi-pilot.s3.us-east-1.${AWS::URLSuffix}/cfn-abi-deepwatch-mdr/templates/deepwatch-logging-resource-configuration.yaml
       Parameters:
         - ParameterKey: pGuardDutyBucketName
           ParameterValue: !GetAtt [GuardDutyStack, Outputs.oPublishingDestinationBucketName]
