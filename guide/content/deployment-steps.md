@@ -5,13 +5,13 @@ description: Deployment steps
 ---
 
 
-## Launch the CloudFormation Template in the Management Account
+## Launch the CloudFormation template in the management account
 
 
-1. Download the cloudformation template from source: https://github.com/aws-ia/cfn-abi-deepwatch-mdr
-2. Launch CloudFormation template in your AWS Control Tower home region.
+1. Download the CloudFormation template from https://github.com/aws-ia/cfn-abi-deepwatch-mdr.
+2. Launch the CloudFormation template from your AWS Control Tower home Region.
     * Stack name: `template-deepwatch-enable-integrations`
-    * List Parameters with [call out default values and update below example as needed]
+    * List parameters with [call out default values and update below example as needed]
         * **pDeepwatchRoleName**: `deepwatch-mdr-role`
         * **pSraTestingFlag**: `false`
         * **pSRASolutionName**: `sra-guardduty-org`
@@ -22,29 +22,31 @@ description: Deployment steps
         * **pSRASourceS3BucketName**: `aws-abi-pilot`
         * **pSRAStagingS3KeyPrefix**: `cfn-abi-deepwatch-mdr`
 
-3. Choose both the **Capabilities** and select **Submit** to launch the stack.
+3. To launch the stack, choose the **Capabilities** and then **Submit**.
 
     [] I acknowledge that AWS CloudFormation might create IAM resources with custom names.
 
     [] I acknowledge that AWS CloudFormation might require the following capability: CAPABILITY_AUTO_EXPAND    
 
-Wait for the CloudFormation status to change to `CREATE_COMPLETE` state.
+Wait for the CloudFormation status to change to `CREATE_COMPLETE`.
 
 
 ## Launch using Customizations for Control Tower (CfCT)
 
 
-[Customizations for AWS Control Tower](https://aws.amazon.com/solutions/implementations/customizations-for-aws-control-tower/) combines AWS Control Tower and other highly-available, trusted AWS services to help customers more quickly set up a secure, multi-account AWS environment using AWS best practices. You can easily add customizations to your AWS Control Tower landing zone using an AWS CloudFormation template and service control policies (SCPs). You can deploy the custom template and policies to individual accounts and organizational units (OUs) within your organization. It also integrates with AWS Control Tower lifecycle events to ensure that resource deployments stay in sync with your landing zone. For example, when a new account is created using the AWS Control Tower account factory, Customizations for AWS Control Tower ensures that all resources attached to the account's OUs will be automatically deployed.
+[Customizations for AWS Control Tower](https://aws.amazon.com/solutions/implementations/customizations-for-aws-control-tower/) combines AWS Control Tower and other highly available, trusted AWS services to help customers set up a secure, multiaccount AWS environment according to AWS best practices. You can add customizations to your AWS Control Tower landing zone using an AWS CloudFormation template and service control policies (SCPs). You can deploy the custom template and policies to individual accounts and organizational units (OUs) within your organization.
 
-The templates provided as part of the ABI packages are deployable using Customizations for Control Tower. Please check below for additional details.
+CfCT also integrates with AWS Control Tower lifecycle events to hlep ensure that resource deployments stay in sync with your landing zone. For example, when you create a new account using AWS Control Tower account factory, CfCT deploys all of the resources that are attached to the account.
 
-#### Pre-requisites
+The templates provided by this ABI package are deployable through CfCT.
 
-1. The CfCT solution, do not have ability to launch resources on the Management account. Hence, you need to create the role with required permissions in the Management account.
+#### Prerequisites
+
+The CfCT solution can't launch resources in the management account, so you must manually create a role in that account that has necessary permissions.
 
 #### How it works
 
-To deploy this sample partner integration page using CfCT solution, add the following blurb to the `manifest.yaml` file from your CfCT solution and update the account/ou names as needed.
+To deploy this sample partner integration page using CfCT, add the following blurb to the `manifest.yaml` file from your CfCT solution and update the account names as needed.
 
 ```
 resources:
@@ -64,4 +66,4 @@ resources:
 ```
 
 
-**Next:** Choose [Postdeployment Options](/post-deployment-steps/index.html) to get started.
+**Next:** [Postdeployment options](/post-deployment-steps/index.html)

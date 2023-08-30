@@ -1,14 +1,14 @@
 ---
 weight: 3
-title: Terminologies
-description: Terminolgies used in this guide.
+title: Terminology
+description: Terms used in this guide
 ---
 
-* **ABI :**   AWS Built In (ABI)  as explained above.
-* **ABI Modules :** The GitHub repositories based of AWS SRA, which provide templates for enabling AWS foundational services like CloudTrail, GuardDuty, SecurityHub and more security services.
-* **ABI Projects :** The GitHub repositories built by Partners in partnership with AWS. While building these projects, partners leverage ABI Modules provided to enable AWS services as needed before creating partner specific assets. The project contains 1\ IaC templates to automate enablement of both AWS and Partner services, 2\ Wrappers for most common formats like CfCT manifest, SC Baselines and more to allow customers to easily pick and choose from the services available. For Pilot, we will focus only on including CfCT manifest file in the package.
-* **Deepwatch MDR :** The Deepwatch Managed Detection & Response service. This solution is applicable only for Deepwatch customers that have this service.
-* **Deepwatch MDR AWS Account :** The AWS account that the Deepwatch MDR service, and requisite resources are hosted in. This account will be referenced in various architectures and diagrams located throughout.
-* **Customer AWS Resources :** The resources deployed in the Deepwatch customer's AWS account to facilitate log-ingestion, including all necessary Lambdas, SNS Topics, SQS Queues, S3 Event Notifications, and IAM Roles & Policies.
+* **ABI:** AWS Built-In.
+* **ABI modules:** This GitHub repository is based on AWS SRA, which provide templates for enabling AWS foundational services like CloudTrail, GuardDuty, SecurityHub, and other security services.
+* **ABI projects:** This GitHub repository is built by partners in collaboration with AWS. While building these projects, partners use ABI modules to enable necessary AWS services before creating partner-specific assets. The project contains 1\ IaC templates to automate enablement of both AWS and Partner services, 2\ Wrappers for most common formats like the CfCT manifest, SC baselines, and more so customers can pick and choose available services. For this pilot, the package includes only the CfCT manifest file.
+* **Deepwatch MDR:** DeepWatch managed-detection-and-response service. This applies only to DeepWatch customers that use this service.
+* **Deepwatch MDR AWS account:** The AWS account that uses the DeepWatch MDR service where the required resources are hosted. This account is referenced in the accompanying architecture diagrams.
+* **Customer AWS resources:** The resources deployed in the DeepWatch customer's AWS account to facilitate log ingestion. This includes all of the necessary Lambdas, SNS topics, SQS queues, S3 Event Notifications, and IAM roles and policies.
 
-**Next:** Choose [Cost and licenses](/costandlicenses/index.html) to get started.
+**Next:** [Costs and licenses](/costandlicenses/index.html)
