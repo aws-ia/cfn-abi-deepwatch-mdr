@@ -75,3 +75,4 @@ The Deepwatch CloudFormation StackSet creates several AWS resources:
 
 Additionally there is a custom resource that will place an event notification configuration on the GuardDuty and CloudTrail buckets to forward all new objectcreate events to the respective SQS queue/SNS Topic.
 
+
