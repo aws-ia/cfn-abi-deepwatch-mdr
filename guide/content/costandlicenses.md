@@ -1,19 +1,19 @@
 ---
 weight: 4
-title: Cost and licenses
-description: Cost of the solution and licenses required.
+title: Costs and licenses
+description: Cost of the solution and licenses required
 ---
 
-The only costs occurred with the deployment of this solution are those for the AWS resources used. For a complete pricing detailed breakdown, please see the AWS pricing pages in your deployed regions for the following solutions:
+There is no AWS cost to use this solution, but you will be billed for any AWS services or resources that this package deploys. For more information about costs, refer to the AWS pricing pages in your Region for the following services:
 
-* [GuardDuty](https://aws.amazon.com/guardduty/pricing/)
+* [Amazon GuardDuty](https://aws.amazon.com/guardduty/pricing/)
 
-* [CloudTrail](https://aws.amazon.com/cloudtrail/pricing/)
+* [AWS CloudTrail](https://aws.amazon.com/cloudtrail/pricing/)
 
-* [Lambda](https://aws.amazon.com/lambda/pricing/)
+* [AWS Lambda](https://aws.amazon.com/lambda/pricing/)
 
-* [SQS](https://aws.amazon.com/sqs/pricing/)
+* [Amazon SQS](https://aws.amazon.com/sqs/pricing/)
 
-* [SNS](https://aws.amazon.com/sns/pricing/)
+* [Amazon SNS](https://aws.amazon.com/sns/pricing/)
 
-**Next:** Choose [Architecture](/architecture/index.html) to get started.
+**Next:** [Architecture](/architecture/index.html)

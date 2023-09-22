@@ -12,13 +12,11 @@ tests:
       - us-east-1
     template: templates/deepwatch-root-stack.yaml
     parameters:
-      pSRAStagingS3KeyPrefix: $[taskcat_project_name]
       pSRASourceS3BucketName: $[taskcat_autobucket]
-      pSRASourceS3BucketNamePrefix: $[taskcat_project_name]
       pSRAS3BucketRegion: us-east-1
       pAutoEnableS3Logs: 'true'
       pAutoEnableK8sLogs: 'false'
       pAutoEnableMalwareProtection: 'false'
-      pSRASolutionName: sra-guardduty-org
-      pSraTestingFlag: 'true'
       pDeepwatchRoleName: 'deepwatch-mdr-role'
+      pEnableLambdaDataEvents: 'false'
+      pEnableS3DataEvents: 'true'
