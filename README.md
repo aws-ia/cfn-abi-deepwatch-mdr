@@ -73,5 +73,5 @@ The Deepwatch CloudFormation StackSet creates several AWS resources:
 - `CloudTrailDeadLetterQueue`: an SQS queue that acts as a dead-letter queue for the CloudTrailQueue.
 - `CloudTrailDeadLetterQueuePolicy`: an SQS queue policy that grants permissions to access the dead-letter queue for the CloudTrail queue.
 
-Additionally there is a custom resource that will place an event notification configuration on the GuardDuty and CloudTrail buckets to forward all new objectcreate events to the respective SQS queue/SNS Topic.
+Additionally, there is a custom resource that will place an event notification configuration on the GuardDuty and CloudTrail buckets to forward all new objectcreate events to the respective SQS queue/SNS Topic.
 
