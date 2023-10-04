@@ -19,7 +19,7 @@ description: Deployment steps
         * **pAutoEnableK8sLogs**: `false`
         * **pAutoEnableS3Logs**: `true`
         * **pSRAS3BucketRegion**: `true`
-        * **pSRASourceS3BucketName**: `aws-abi-pilot`
+        * **pSRASourceS3BucketName**: `aws-abi`
         * **pSRAStagingS3KeyPrefix**: `cfn-abi-deepwatch-mdr`
 
 3. To launch the stack, choose the **Capabilities** and then **Submit**.
@@ -51,13 +51,13 @@ To deploy this sample partner integration page using CfCT, add the following blu
 ```
 resources:
   - name: sra-enable-partner1-solution
-    resource_file: https://aws-abi-pilot.s3.us-east-1.amazonaws.com/cfn-abi-aws-reference-guide/templates/abi-enable-partner1-securityhub-integration.yaml
+    resource_file: https://aws-abi.s3.us-east-1.amazonaws.com/cfn-abi-aws-reference-guide/templates/abi-enable-partner1-securityhub-integration.yaml
     deploy_method: stack_set
     parameters:
       - parameter_key: pProductArn
         parameter_value: arn:aws:securityhub:us-east-1::product/cloud-custodian/cloud-custodian
       - parameter_key: pSRASourceS3BucketName
-        parameter_value: aws-abi-pilot
+        parameter_value: aws-abi
       - parameter_key: pSRAStagingS3KeyPrefix
         parameter_value: cfn-abi-aws-reference-guide
     deployment_targets:
