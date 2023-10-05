@@ -5,8 +5,7 @@ description: Deployment steps
 ---
 
 
-## Launch the CloudFormation template in the management account
-
+## Launch the CloudFormation template in the AWS Organizations management account {#launch-cfn}
 
 1. Download the CloudFormation template from https://github.com/aws-ia/cfn-abi-deepwatch-mdr.
 2. Launch the CloudFormation template from your AWS Control Tower home Region.
@@ -19,7 +18,7 @@ description: Deployment steps
         * **pAutoEnableK8sLogs**: `false`
         * **pAutoEnableS3Logs**: `true`
         * **pSRAS3BucketRegion**: `true`
-        * **pSRASourceS3BucketName**: `aws-abi-pilot`
+        * **pSRASourceS3BucketName**: `aws-abi`
         * **pSRAStagingS3KeyPrefix**: `cfn-abi-deepwatch-mdr`
 
 3. To launch the stack, choose the **Capabilities** and then **Submit**.
@@ -31,7 +30,7 @@ description: Deployment steps
 Wait for the CloudFormation status to change to `CREATE_COMPLETE`.
 
 
-## Launch using Customizations for Control Tower (CfCT)
+## Launch using Customizations for Control Tower {#launch-cfct}
 
 
 [Customizations for AWS Control Tower](https://aws.amazon.com/solutions/implementations/customizations-for-aws-control-tower/) combines AWS Control Tower and other highly available, trusted AWS services to help customers set up a secure, multiaccount AWS environment according to AWS best practices. You can add customizations to your AWS Control Tower landing zone using an AWS CloudFormation template and service control policies (SCPs). You can deploy the custom template and policies to individual accounts and organizational units (OUs) within your organization.
@@ -48,18 +47,28 @@ The CfCT solution can't launch resources in the management account, so you must 
 
 To deploy this sample partner integration page using CfCT, add the following blurb to the `manifest.yaml` file from your CfCT solution and update the account names as needed.
 
-```
+```yaml
 resources:
-  - name: sra-enable-partner1-solution
-    resource_file: https://aws-abi-pilot.s3.us-east-1.amazonaws.com/cfn-abi-aws-reference-guide/templates/abi-enable-partner1-securityhub-integration.yaml
+  - name: deepwatch-logging-top-level
+    resource_file: https://aws-abi.s3.us-east-1.amazonaws.com/cfn-abi-deepwatch-mdr/templates/deepwatch-root-stack.yaml
     deploy_method: stack_set
     parameters:
-      - parameter_key: pProductArn
-        parameter_value: arn:aws:securityhub:us-east-1::product/cloud-custodian/cloud-custodian
       - parameter_key: pSRASourceS3BucketName
-        parameter_value: aws-abi-pilot
-      - parameter_key: pSRAStagingS3KeyPrefix
-        parameter_value: cfn-abi-aws-reference-guide
+        parameter_value: aws-abi
+      - parameter_key: pSRAS3BucketRegion
+        parameter_value: us-east-1
+      - parameter_key: pAutoEnableS3Logs
+        parameter_value: 'true'
+      - parameter_key: pAutoEnableK8sLogs
+        parameter_value: 'false'
+      - parameter_key: pAutoEnableMalwareProtection
+        parameter_value: 'false'
+      - parameter_key: pDeepwatchRoleName
+        parameter_value: 'deepwatch-mdr-role'
+      - parameter_key: pEnableLambdaDataEvents
+        parameter_value: 'false'
+      - parameter_key: pEnableS3DataEvents
+        parameter_value: 'true'
     deployment_targets:
       accounts:
         - [[MANAGEMENT-AWS-ACCOUNT-ID]]
