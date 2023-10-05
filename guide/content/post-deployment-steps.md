@@ -17,7 +17,7 @@ Wait for the stack to finish deploying, and then check the status of the deploym
 After the deployment completes, you will see the root stack and nested stacks in the AWS Control Tower management account.
 ![Control Tower Manager Account Stacks](/images/test-deployment.png)
 
-If you log in to the Control Tower log archive account, you will see something similar. Take note of the output values of the `StackSet-deepwatch-logging-resource-configuration-*uuid*` stack. Your DeepWatch engineer needs these values to finish setting up ingestion.
+After you deploy the solution, provide your Deepwatch security engineer expert the output values of the `StackSet-deepwatch-logging-resource-configuration-*uuid*` stack. These values will be needed to finish setting up ingestion.
 ![Control Tower log archive account stacks](/images/test-deployment2.png)
 
 
@@ -27,4 +27,4 @@ After you deploy the solution, provide your DeepWatch engineer with the followin
 - `oGuardDutyQueueArn`
 - `oDeepwatchRoleArn`
 
-**Next:** [Test the Deployment](/test-deployment/index.html)
+**Next:** [Additonal resources](/additional-resources/index.html)
