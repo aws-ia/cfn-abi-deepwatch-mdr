@@ -5,10 +5,13 @@ description: Deployment steps
 ---
 
 
+
 ## Launch the CloudFormation template in the AWS Organizations management account {#launch-cfn}
 
-1. Download the CloudFormation template from https://github.com/aws-ia/cfn-abi-deepwatch-mdr.
-2. Launch the CloudFormation template from your AWS Control Tower home Region.
+This option creates all of the necessary resources for ingestion of AWS security logs into the DeepWatch MDR platform. During the deployment, you can choose which options to enable for the individual services.
+
+1. Download the [CloudFormation template](https://raw.githubusercontent.com/aws-ia/cfn-abi-deepwatch-mdr/main/templates/deepwatch-root-stack.yaml)
+2. Launch the CloudFormation template from your [AWS Control Tower home Region](https://docs.aws.amazon.com/controltower/latest/userguide/region-how.html).
     * Stack name: `template-deepwatch-enable-integrations`
     * List parameters with [call out default values and update below example as needed]
         * **pDeepwatchRoleName**: `deepwatch-mdr-role`
