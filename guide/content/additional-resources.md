@@ -6,7 +6,7 @@ description: Additional resources
 
 ## Partner documentation
 
-* [Deepwatch](https://www.deepwatch.com/)
+* [Deepwatch Knowledge base](https://deepwatch.service-now.com/$knowledge.do?sysparm_kb=dfc19531bf2021003f07e2c1ac0739ab&sysparm_category=55e01aaadb8a205051916a37059619c9&browse_type=categories&sysparm_type_filter=all). An active subscription needed to access this documentation.
 
 ## AWS services
 
@@ -14,7 +14,6 @@ description: Additional resources
 * [AWS SRA GuardDuty](https://github.com/aws-ia/cfn-abi-amazon-guardduty)
 * [AWS SRA CloudTrail](https://github.com/aws-ia/cfn-abi-aws-cloudtrail)
 
-## FAQs
 
 ## Other resources
 

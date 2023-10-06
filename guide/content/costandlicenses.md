@@ -4,7 +4,13 @@ title: Costs and licenses
 description: Cost of the solution and licenses required
 ---
 
-There is no AWS cost to use this solution, but you will be billed for any AWS services or resources that this package deploys. For more information about costs, refer to the AWS pricing pages in your Region for the following services:
+## Deepwatch licensing costs
+
+For your cost considerations, deployment of solution presumes that you are already a Deepwatch MDR customer, you can view [Deepwatch service pricing information on the AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-7xr5ppn2unxfe?sr=0-1&ref_=beagle&applicationId=AWSMPContessa).
+
+## AWS service costs
+
+There is no additional cost to use this solution, but you will be billed for any AWS services or resources that this package deploys. For more information about costs, refer to the AWS pricing pages in your Region for the following services:
 
 * [Amazon GuardDuty](https://aws.amazon.com/guardduty/pricing/)
 
