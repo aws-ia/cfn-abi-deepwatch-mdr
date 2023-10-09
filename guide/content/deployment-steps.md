@@ -13,22 +13,20 @@ This option creates all of the necessary resources for ingestion of AWS security
 1. Download the [CloudFormation template](https://raw.githubusercontent.com/aws-ia/cfn-abi-deepwatch-mdr/main/templates/deepwatch-root-stack.yaml)
 2. Launch the CloudFormation template from your [AWS Control Tower home Region](https://docs.aws.amazon.com/controltower/latest/userguide/region-how.html).
     * Stack name: `template-deepwatch-enable-integrations`
-    * List parameters with [call out default values and update below example as needed]
         * **pDeepwatchRoleName**: `deepwatch-mdr-role`
-        * **pSraTestingFlag**: `false`
-        * **pSRASolutionName**: `sra-guardduty-org`
+        * **pSRAS3BucketRegion**: `us-east-1`
+        * **pSRASourceS3BucketName**: `aws-abi`
         * **pAutoEnableMalwareProtection**: `false`
         * **pAutoEnableK8sLogs**: `false`
         * **pAutoEnableS3Logs**: `true`
-        * **pSRAS3BucketRegion**: `true`
-        * **pSRASourceS3BucketName**: `aws-abi`
-        * **pSRAStagingS3KeyPrefix**: `cfn-abi-deepwatch-mdr`
+        * **pEnableS3DataEvents**: `true`
+        * **pEnableLambdaDataEvents**: `true`
 
 3. To launch the stack, choose the **Capabilities** and then **Submit**.
 
-    [] I acknowledge that AWS CloudFormation might create IAM resources with custom names.
+    [x] I acknowledge that AWS CloudFormation might create IAM resources with custom names.
 
-    [] I acknowledge that AWS CloudFormation might require the following capability: CAPABILITY_AUTO_EXPAND    
+    [x] I acknowledge that AWS CloudFormation might require the following capability: CAPABILITY_AUTO_EXPAND    
 
 Wait for the CloudFormation status to change to `CREATE_COMPLETE`.
 
