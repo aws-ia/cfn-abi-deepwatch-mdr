@@ -11,10 +11,10 @@ Deploying this ABI package with default parameters builds the following architec
 As shown in the diagram, this solution sets up the following:
 
 #### Enable organization level CloudTrail
-    * [Creates a trail for the organization](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/creating-trail-organization.html) in the management account.
-    * Customer managed KMS key for the AWS Organizations CloudTrail logs and S3 server-side encryption created in the audit account.
-    * AWS Secrets Manager secret containing the customer managed KMS key ARN in the audit account.
-    * S3 bucket where the Organization CloudTrail logs are sent for all accounts in the AWS Organization
+* [Creates an organizational trail for all accounts in the organization](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/creating-trail-organization.html) in the management account.
+* Customer managed KMS key for the AWS Organizations CloudTrail logs and S3 server-side encryption created in the audit account.
+* AWS Secrets Manager secret containing the customer managed KMS key ARN in the audit account.
+* S3 bucket where the Organization CloudTrail logs are sent for all accounts in the AWS Organization
 
 #### Enable Amazon GuardDuty at organization level
 
@@ -27,7 +27,10 @@ As shown in the diagram, this solution sets up the following:
 
 #### Deepwatch Managed Detection and Response (MDR) Integration
 
-* A stack set on the management account that creates the following resources in the Log Archive account:
-    * Create event notifications  and queuing mechanism on CloudTrail and GuardDuty logging buckets to forward the events to the Deepwatch MDR platform. This includes all necessary Lambda functions, SNS topics, SQS queues, S3 Event Notifications, and IAM roles.
+* Deploys a stack set from the management account that creates the following resources in the Log Archive account:
+  * Event notification on s3 bucket storing organizational GuardDuty and CloudTrail logs
+  * SNS Topic and SQS queues for storing of s3 event notifications
+  * Lambda function for processing and filtering of messages in SQS queues
+  * IAM Role for cross-account role assumption by Deepwatch MDR Platform
 
 **Next:** [Deployment options](/deployment-options/index.html)

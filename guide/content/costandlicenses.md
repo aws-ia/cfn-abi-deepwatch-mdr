@@ -6,7 +6,7 @@ description: Cost of the solution and licenses required
 
 ## Deepwatch licensing costs
 
-For your cost considerations, deployment of solution presumes that you are already a Deepwatch MDR customer, you can view [Deepwatch service pricing information on the AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-7xr5ppn2unxfe?sr=0-1&ref_=beagle&applicationId=AWSMPContessa).
+To address your cost-related concerns, please note that the deployment of this solution assumes that you are an existing Deepwatch MDR customer. You can find detailed pricing information for [Deepwatch services on the AWS Marketplace.](https://aws.amazon.com/marketplace/pp/prodview-7xr5ppn2unxfe?sr=0-1&ref_=beagle&applicationId=AWSMPContessa).
 
 ## AWS service costs
 

@@ -4,9 +4,9 @@ title: Additional resources
 description: Additional resources
 ---
 
-## Partner documentation
+## Deepwatch documentation
 
-* [Deepwatch Knowledge base](https://deepwatch.service-now.com/$knowledge.do?sysparm_kb=dfc19531bf2021003f07e2c1ac0739ab&sysparm_category=55e01aaadb8a205051916a37059619c9&browse_type=categories&sysparm_type_filter=all). An active subscription needed to access this documentation.
+* [Deepwatch Knowledge base](https://deepwatch.service-now.com/$knowledge.do?sysparm_kb=dfc19531bf2021003f07e2c1ac0739ab&sysparm_category=55e01aaadb8a205051916a37059619c9&browse_type=categories&sysparm_type_filter=all). An active subscription is needed to access this documentation.
 
 ## AWS services
 
