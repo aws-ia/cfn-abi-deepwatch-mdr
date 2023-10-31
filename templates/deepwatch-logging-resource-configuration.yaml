@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   Template that creates all of the resources needed in the logarchive account to
-  begin Deepwatch ingestion of logs via SQS-based-s3 ingestion (abi-1kirFQBF75MfEQ3RbMQHRb-5Qgs4qOsPgbXnTtlFjeTTo-ln8887cq)
+  begin Deepwatch ingestion of logs via SQS-based-s3 ingestion (abp-1kirFQBF75MfEQ3RbMQHRb-5Qgs4qOsPgbXnTtlFjeTTo-ln8887cq)
 
 Metadata:
   AWS::CloudFormation::Interface:
