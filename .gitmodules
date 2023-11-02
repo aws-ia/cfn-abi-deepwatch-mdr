@@ -4,3 +4,6 @@
 [submodule "submodules/cfn-abi-amazon-guardduty"]
 	path = submodules/cfn-abi-amazon-guardduty
 	url = git@github.com:aws-ia/cfn-abi-amazon-guardduty.git
+[submodule "submodules/aws-security-reference-architecture-examples"]
+	path = submodules/aws-security-reference-architecture-examples
+	url = https://github.com/aws-samples/aws-security-reference-architecture-examples.git
