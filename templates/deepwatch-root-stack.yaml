@@ -10,38 +10,66 @@ Metadata:
         Parameters:
           - pSRASourceS3BucketName
           - pSRAS3BucketRegion
+          - pRepoURL
+          - pRepoBranch
       - Label:
           default: General Properties
         Parameters:
           - pDeepwatchRoleName
+          - pSRAAlarmEmail
       - Label:
-          default: GuardDuty Configuration Properties
+          default: GuardDuty
         Parameters:
+          - pDisableGuardDuty
           - pAutoEnableS3Logs
-          - pAutoEnableK8sLogs
+          - pAutoEnableKubernetesAuditLogs
           - pAutoEnableMalwareProtection
+          - pEnableRdsLoginEvents
+          - pEnableEksRuntimeMonitoring
+          - pEnableEksAddonManagement
+          - pEnableLambdaNetworkLogs
+          - pGuardDutyFindingPublishingFrequency
       - Label:
           default: CloudTrail Configuration Properties
         Parameters:
           - pEnableLambdaDataEvents
           - pEnableS3DataEvents
+
     ParameterLabels:
       pSRASourceS3BucketName:
         default: SRA Source S3 Location
       pSRAS3BucketRegion:
         default: SRA Bucket Region
+      pDisableGuardDuty:
+        default: pDisableGuardDuty
       pAutoEnableS3Logs:
-        default: Auto Enable S3 Logs
-      pAutoEnableK8sLogs:
-        default: Auto Enable kubernetes Logs
+        default: pAutoEnableS3Logs
+      pAutoEnableKubernetesAuditLogs:
+        default: pAutoEnableKubernetesAuditLogs
       pAutoEnableMalwareProtection:
-        default: Auto Enable malware protection
+        default: pAutoEnableMalwareProtection
+      pEnableRdsLoginEvents:
+        default: pEnableRdsLoginEvents
+      pEnableEksRuntimeMonitoring:
+        default: pEnableEksRuntimeMonitoring
+      pEnableEksAddonManagement:
+        default: pEnableEksAddonManagement
+      pEnableLambdaNetworkLogs:
+        default: pEnableLambdaNetworkLogs
+      pGuardDutyFindingPublishingFrequency:
+        default: pGuardDutyFindingPublishingFrequency
       pDeepwatchRoleName:
         default: IAM Role name for Deepwatch solution access
       pEnableLambdaDataEvents:
         default: Enable Cloud Trail Data Events for all Lambda functions
       pEnableS3DataEvents:
         default: Enable Cloud Trail S3 Data Events for all buckets
+      pRepoURL:
+        default: URL of the AWS SRA Repository
+      pRepoBranch:
+        default: A tag version to use with in the SRA repository
+      pSRAAlarmEmail:
+        default: (Optional) SRA Alarm Email
 Parameters:
   pSRASourceS3BucketName:
     AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
@@ -57,33 +85,21 @@ Parameters:
     AllowedPattern: '^[a-z][a-z]-[a-z]*-[0-9]*$'
     Type: String
     Default: us-east-1
-  pAutoEnableS3Logs:
-    AllowedValues:
-      - 'true'
-      - 'false'
-    Default: 'true'
-    Description: Auto enable S3 logs
-    Type: String
-  pAutoEnableK8sLogs:
-    AllowedValues:
-      - 'true'
-      - 'false'
-    Default: 'false'
-    Description: Auto Enable kubernetes Logs
-    Type: String
-  pAutoEnableMalwareProtection:
-    AllowedValues:
-      - 'true'
-      - 'false'
-    Default: 'false'
-    Description: Auto Enable malware protection
-    Type: String
   pDeepwatchRoleName:
     AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
     ConstraintDescription: 'Must be alphanumeric or special characters [., _, -].'
     Default: deepwatch-mdr-role
     Description: The name of the role that will be created to provide access to ingest logs
     Type: String
+  pRepoURL:
+    Default: "https://github.com/aws-samples/aws-security-reference-architecture-examples.git"
+    Description: AWS Security Reference Architecture examples repository URL
+    Type: String
+  pRepoBranch:
+    Default: "tags/v3.0.4"
+    Description: SRA version to tag
+    Type: String
+
   pEnableLambdaDataEvents:
     AllowedValues: ['true', 'false']
     Default: 'true'
@@ -94,27 +110,93 @@ Parameters:
     Default: 'true'
     Description: Enable Cloud Trail S3 Data Events for all buckets
     Type: String
+
+  pDisableGuardDuty:
+    AllowedValues: ['Yes', 'No']
+    Default: 'No'
+    Description: Disable the GuardDuty solution in all accounts and regions before deleting the stack.
+    Type: String
+  pAutoEnableS3Logs:
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+    Description: Auto enable S3 logs
+    Type: String
+  pAutoEnableKubernetesAuditLogs:
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+    Description: Auto enable Kubernetes Audit Logs
+    Type: String
+  pAutoEnableMalwareProtection:
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+    Description: Auto enable Malware Protection
+    Type: String
+  pEnableRdsLoginEvents:
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+    Description: Auto enable RDS Login Events
+    Type: String   
+  pEnableEksRuntimeMonitoring:
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+    Description: Auto enable EKS Runtime Monitoring
+    Type: String   
+  pEnableEksAddonManagement:
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+    Description: Auto enable EKS Add-on Management
+    Type: String
+  pEnableLambdaNetworkLogs:
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+    Description: Auto enable Lambda Network Logs
+    Type: String
+  pGuardDutyFindingPublishingFrequency:
+    AllowedValues: [FIFTEEN_MINUTES, ONE_HOUR, SIX_HOURS]
+    Default: FIFTEEN_MINUTES
+    Description: Finding publishing frequency
+    Type: String
+  pSRAAlarmEmail:
+    AllowedPattern: '^$|^([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)$'
+    ConstraintDescription: Must be a valid email address.
+    Default: ''
+    Description: (Optional) Email address for receiving SRA alarms
+    Type: String
+
 Resources:
   CloudTrailStack:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       TemplateURL: !Sub >-
-        https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/cfn-abi-deepwatch-mdr/submodules/cfn-abi-aws-cloudtrail/templates/sra-cloudtrail-enable-in-org-ssm.yaml
+        https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/cfn-abi-deepwatch-mdr/submodules/aws-security-reference-architecture-examples/aws_sra_examples/modules/cloudtrail-org-module/templates/sra-cloudtrail-org-module-main.yaml
       Parameters:
+        pRepoURL: !Ref pRepoURL
+        pRepoBranch: !Ref pRepoBranch
         pEnableDataEventsOnly: false
         pEnableS3DataEvents: !Ref pEnableS3DataEvents
         pEnableLambdaDataEvents: !Ref pEnableLambdaDataEvents
-        pSRAS3BucketRegion: !Ref pSRAS3BucketRegion
   GuardDutyStack:
     Type: 'AWS::CloudFormation::Stack'
+    DependsOn:
+         - "CloudTrailStack"
     Properties:
       TemplateURL: !Sub >-
-        https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/cfn-abi-deepwatch-mdr/submodules/cfn-abi-amazon-guardduty/templates/sra-guardduty-enable-in-org-ssm.yaml
+        https://${pSRASourceS3BucketName}.s3.${pSRAS3BucketRegion}.${AWS::URLSuffix}/cfn-abi-deepwatch-mdr/submodules/aws-security-reference-architecture-examples/aws_sra_examples/modules/guardduty-org-module/templates/sra-guardduty-org-module-main.yaml
       Parameters:
+        pRepoURL: !Ref pRepoURL
+        pRepoBranch: !Ref pRepoBranch
+        pSRAAlarmEmail: !Ref pSRAAlarmEmail
+        pDisableGuardDuty: !Ref pDisableGuardDuty
         pAutoEnableS3Logs: !Ref pAutoEnableS3Logs
-        pAutoEnableK8sLogs: !Ref pAutoEnableK8sLogs
+        pAutoEnableKubernetesAuditLogs: !Ref pAutoEnableKubernetesAuditLogs
         pAutoEnableMalwareProtection: !Ref pAutoEnableMalwareProtection
-        pSRAS3BucketRegion: !Ref pSRAS3BucketRegion
+        pEnableRdsLoginEvents: !Ref pEnableRdsLoginEvents
+        pEnableEksRuntimeMonitoring: !Ref pEnableEksRuntimeMonitoring
+        pEnableEksAddonManagement: !Ref pEnableEksAddonManagement
+        pEnableLambdaNetworkLogs: !Ref pEnableLambdaNetworkLogs
+        pGuardDutyFindingPublishingFrequency: !Ref pGuardDutyFindingPublishingFrequency
+
+
   DeepwatchResourceConfigurationStack:
     Type: AWS::CloudFormation::StackSet
     Properties:

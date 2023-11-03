@@ -8,7 +8,10 @@ PROJECT_TYPE_PATH=${BASE_PATH}/projecttype
 
 cd ${PROJECT_PATH}
 
-regions=(us-east-1 us-east-2 us-west-2 us-west-1)
+#regions=(us-east-1 us-east-2 us-west-2 us-west-1)
+export AWS_DEFAULT_REGION=us-east-1
+
+regions=($(aws ec2 describe-regions --query "Regions[*].RegionName" --output text))
 for region in ${regions[@]}
 do
     echo "Cleanup running in region: $region"
