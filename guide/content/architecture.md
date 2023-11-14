@@ -11,10 +11,11 @@ Deploying this ABI package with default parameters builds the following architec
 As shown in the diagram, this solution sets up the following:
 
 #### Enable organization level CloudTrail
+
 * [Creates an organizational trail for all accounts in the organization](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/creating-trail-organization.html) in the management account.
-* Customer managed KMS key for the AWS Organizations CloudTrail logs and S3 server-side encryption created in the audit account.
+* A customer managed KMS key for the AWS Organizations CloudTrail logs and Amazon Simple Storage Service (Amazon S3) server-side encryption in the audit account.
 * AWS Secrets Manager secret containing the customer managed KMS key ARN in the audit account.
-* S3 bucket where the Organization CloudTrail logs are sent for all accounts in the AWS Organization
+* Amazon S3 bucket in the log archive account, where the organization CloudTrail logs are sent for all accounts in the AWS Organization.
 
 #### Enable Amazon GuardDuty at organization level
 
@@ -28,8 +29,8 @@ As shown in the diagram, this solution sets up the following:
 #### Deepwatch Managed Detection and Response (MDR) Integration
 
 * Deploys a stack set from the management account that creates the following resources in the Log Archive account:
-  * Event notification on s3 bucket storing organizational GuardDuty and CloudTrail logs
-  * SNS Topic and SQS queues for storing of s3 event notifications
+  * Event notification on S3 bucket where the organizational GuardDuty and CloudTrail logs are stored
+  * SNS Topic and SQS queues to process the S3 event notifications
   * Lambda function for processing and filtering of messages in SQS queues
   * IAM Role for cross-account role assumption by Deepwatch MDR Platform
 

@@ -18,7 +18,7 @@ Metadata:
           - pDeepwatchRoleName
           - pSRAAlarmEmail
       - Label:
-          default: GuardDuty
+          default: GuardDuty Configuration Properties
         Parameters:
           - pDisableGuardDuty
           - pAutoEnableS3Logs

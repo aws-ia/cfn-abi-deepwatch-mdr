@@ -15,7 +15,7 @@ tests:
       pSRASourceS3BucketName: $[taskcat_autobucket]
       pSRAS3BucketRegion: us-east-1
       pAutoEnableS3Logs: 'true'
-      pAutoEnableK8sLogs: 'false'
+      pAutoEnableKubernetesAuditLogs: 'false'
       pAutoEnableMalwareProtection: 'false'
       pDeepwatchRoleName: 'deepwatch-mdr-role'
       pEnableLambdaDataEvents: 'false'
