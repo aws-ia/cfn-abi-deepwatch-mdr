@@ -25,7 +25,7 @@ cleanup_all_regions() {
 
 run_test() {
     echo "Running e2e test: $1"
-    cleanup_all_regions()
+    cleanup_all_regions
     echo $AWS_DEFAULT_REGION
     unset AWS_DEFAULT_REGION
     echo $AWS_DEFAULT_REGION
