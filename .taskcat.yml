@@ -20,3 +20,12 @@ tests:
       pDeepwatchRoleName: 'deepwatch-mdr-role'
       pEnableLambdaDataEvents: 'false'
       pEnableS3DataEvents: 'true'
+      pDisableGuardDuty: 'Yes'
+
+  logging-top-level-defaults:
+    regions:
+      - us-east-1
+    template: templates/deepwatch-root-stack.yaml
+    parameters:
+      pSRASourceS3BucketName: $[taskcat_autobucket]
+      pDisableGuardDuty: 'Yes'
