@@ -1,15 +1,6 @@
 [
     {
         "Type" : "SSM_PARAMETER",
-        "Filter" : "/sra/gd/"
-    },
-    {
-        "Type" : "SSM_PARAMETER",
-        "Filter" : "/sra/gd/",
-        "Account" : "log_account"
-    },
-    {
-        "Type" : "SSM_PARAMETER",
         "Filter" : "/sra/control-tower/",
         "Account" : "log_account"
     },
@@ -20,24 +11,15 @@
     },
     {
         "Type" : "SSM_PARAMETER",
-        "Filter" : "/sra/"
+        "Filter" : "/sra/control-tower/"
     },
     {
         "Type" : "SSM_PARAMETER",
-        "Filter" : "/sra/ctrail/"
+        "Filter" : "/sra/regions/"
     },
     {
         "Type" : "SSM_PARAMETER",
-        "Filter" : "/sra/gd/"
-    },
-    {
-        "Type" : "S3_BUCKET",
-        "Filter" : "sra-guardduty-org-delivery-",
-        "Account" : "log_account"
-    },
-    {
-        "Type" : "S3_BUCKET",
-        "Filter" : "cfn-abi-amazon-guardduty-"
+        "Filter" : "/sra/staging-s3-bucket-name"
     },
     {
         "Type" : "S3_BUCKET",
@@ -57,29 +39,17 @@
         "Account": "log_account"
     },
     {
-        "Type": "S3_BUCKET",
-        "Filter": "cfn-abi-aws-cloudtrail-"
-    },
-    {
         "Type" : "S3_BUCKET",
         "Filter" : "sra-guardduty-org-delivery-",
         "Account" : "log_account"
     },
     {
         "Type" : "S3_BUCKET",
-        "Filter" : "cfn-abi-amazon-guardduty-"
-    },
-    {
-        "Type" : "S3_BUCKET",
-        "Filter" : "tcat-"
+        "Filter" : "tcat-cfn-abi-deepwatch-mdr-"
     },
     {
         "Type" : "S3_BUCKET",
         "Filter" : "sra-staging-"
-    },
-    {
-        "Type" : "S3_BUCKET",
-        "Filter" : "sra-gd-staging-"
     },
     {
         "Type" : "LOG_GROUP",
