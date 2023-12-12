@@ -17,7 +17,7 @@ This option creates all of the necessary resources for ingestion of AWS security
         * **pSRAS3BucketRegion**: `us-east-1`
         * **pSRASourceS3BucketName**: `aws-abi`
         * **pAutoEnableMalwareProtection**: `false`
-        * **pAutoEnableK8sLogs**: `false`
+        * **pAutoEnableKubernetesAuditLogs**: `false`
         * **pAutoEnableS3Logs**: `true`
         * **pEnableS3DataEvents**: `true`
         * **pEnableLambdaDataEvents**: `true`
@@ -60,7 +60,7 @@ resources:
         parameter_value: us-east-1
       - parameter_key: pAutoEnableS3Logs
         parameter_value: 'true'
-      - parameter_key: pAutoEnableK8sLogs
+      - parameter_key: pAutoEnableKubernetesAuditLogs
         parameter_value: 'false'
       - parameter_key: pAutoEnableMalwareProtection
         parameter_value: 'false'

@@ -15,8 +15,17 @@ tests:
       pSRASourceS3BucketName: $[taskcat_autobucket]
       pSRAS3BucketRegion: us-east-1
       pAutoEnableS3Logs: 'true'
-      pAutoEnableK8sLogs: 'false'
+      pAutoEnableKubernetesAuditLogs: 'false'
       pAutoEnableMalwareProtection: 'false'
       pDeepwatchRoleName: 'deepwatch-mdr-role'
       pEnableLambdaDataEvents: 'false'
       pEnableS3DataEvents: 'true'
+      pDisableGuardDuty: 'Yes'
+
+  logging-top-level-defaults:
+    regions:
+      - us-east-1
+    template: templates/deepwatch-root-stack.yaml
+    parameters:
+      pSRASourceS3BucketName: $[taskcat_autobucket]
+      pDisableGuardDuty: 'Yes'
