@@ -34,6 +34,13 @@ Metadata:
         Parameters:
           - pEnableLambdaDataEvents
           - pEnableS3DataEvents
+      - Label:
+          default: Advanced Configuration Properties
+        Parameters:
+          - pControlTower
+          - pCreateAWSControlTowerExecutionRole
+          - pAdminRoleName
+          - pExecRoleName
 
     ParameterLabels:
       pSRASourceS3BucketName:
@@ -70,6 +77,9 @@ Metadata:
         default: A tag version to use with in the SRA repository
       pSRAAlarmEmail:
         default: (Optional) SRA Alarm Email
+      pControlTower:
+        default: pControlTower
+
 Parameters:
   pSRASourceS3BucketName:
     AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
@@ -162,6 +172,28 @@ Parameters:
     Default: ''
     Description: (Optional) Email address for receiving SRA alarms
     Type: String
+  pControlTower:
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+    Description:
+      Indicates whether AWS Control Tower is deployed and being used for this AWS environment.
+    Type: String
+  pCreateAWSControlTowerExecutionRole:
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+    Description: Indicates whether the AWSControlTowerExecution role should be created in the management account. (Only when AWS Control Tower landing zone is deployed. The 'pControlTower' must be set to 'true')
+    Type: String
+  pAdminRoleName:
+    Default: ' AWSCloudFormationStackSetAdministrationRole'
+    Description: IAM role in the Management account, used to deploy stacks in other account/regions. Needed only when 'pControlTower' is set to 'false'
+    Type: String
+  pExecRoleName:
+    Default: ' AWSCloudFormationStackSetExecutionRole'
+    Description: IAM role in the AWS accounts, which allows trusted access to 'pAdminRoleName'. Needed only when 'pControlTower' is set to 'false'
+    Type: String
+
+Conditions:
+  cControlTowerEnabled: !Equals [!Ref pControlTower, 'true']
 
 Resources:
   CloudTrailStack:
@@ -175,6 +207,7 @@ Resources:
         pEnableDataEventsOnly: false
         pEnableS3DataEvents: !Ref pEnableS3DataEvents
         pEnableLambdaDataEvents: !Ref pEnableLambdaDataEvents
+        pCreateAWSControlTowerExecutionRole: !Ref pCreateAWSControlTowerExecutionRole
   GuardDutyStack:
     Type: 'AWS::CloudFormation::Stack'
     DependsOn:
@@ -201,12 +234,16 @@ Resources:
     Type: AWS::CloudFormation::StackSet
     Properties:
       StackSetName: deepwatch-logging-resource-configuration
-      AdministrationRoleARN: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AWSControlTowerStackSetRole
+      AdministrationRoleARN: 
+        !If
+          - cControlTowerEnabled
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/AWSControlTowerStackSetRole
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${pAdminRoleName}
       CallAs: SELF
       Capabilities:
         - CAPABILITY_NAMED_IAM
       Description: Creates and configures all of the resources needed to begin ingestion of logs into Deepwatch MDR
-      ExecutionRoleName: AWSControlTowerExecution
+      ExecutionRoleName: !Ref pExecRoleName
       ManagedExecution:
         Active: true
       OperationPreferences:
@@ -225,7 +262,7 @@ Resources:
       Parameters:
         - ParameterKey: pGuardDutyBucketName
           ParameterValue: !GetAtt [GuardDutyStack, Outputs.oPublishingDestinationBucketName]
-        - ParameterKey: pControlTowerBucketName
+        - ParameterKey: pCloudTrailBucketName
           ParameterValue: !GetAtt [CloudTrailStack, Outputs.oOrganizationCloudTrailS3BucketName]
         - ParameterKey: pDeepwatchRoleName
           ParameterValue: !Ref pDeepwatchRoleName

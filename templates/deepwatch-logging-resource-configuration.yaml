@@ -9,14 +9,14 @@ Metadata:
       - Label:
           default: General Properties
         Parameters:
-          - pControlTowerBucketName
+          - pCloudTrailBucketName
           - pGuardDutyBucketName
           - pGuardDutyQueueName
           - pCloudTrailQueueName
           - pDeepwatchRoleName
 
     ParameterLabels:
-      pControlTowerBucketName:
+      pCloudTrailBucketName:
         default: The bucket where CloudTrail logs are stored
       pGuardDutyBucketName:
         default: The bucket where GuardDuty logs are stored
@@ -34,9 +34,9 @@ Parameters:
     AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
     ConstraintDescription:
       Must be alphanumeric or special characters [., _, -]. In addition, the slash character ( / ) used to delineate hierarchies in parameter names.
-  pControlTowerBucketName:
+  pCloudTrailBucketName:
     Type: String
-    Description: S3 bucket that stores ControlTower logs.
+    Description: S3 bucket that stores CloudTrail logs.
     AllowedPattern: '^([\w.-]{1,900})$|^(\/[\w.-]{1,900})*[\w.-]{1,900}$'
     ConstraintDescription:
       Must be alphanumeric or special characters [., _, -]. In addition, the slash character ( / ) used to delineate hierarchies in parameter names.
@@ -94,7 +94,7 @@ Resources:
             Principal: '*'
             Condition:
               ArnEquals:
-                'aws:Sourcearn': !Sub 'arn:aws:s3:::${pGuardDutyBucketName}'
+                'aws:Sourcearn': !Sub 'arn:${AWS::Partition}:s3:::${pGuardDutyBucketName}'
       Queues:
         - !Ref rGuardDutyDeadLetterQueue
   
@@ -138,7 +138,7 @@ Resources:
             Principal: '*'
             Condition:
               ArnEquals:
-                'aws:Sourcearn': !Sub 'arn:aws:s3:::${pGuardDutyBucketName}'
+                'aws:Sourcearn': !Sub 'arn:${AWS::Partition}:s3:::${pGuardDutyBucketName}'
       Queues:
         - !Ref rGuardDutyQueue
 
@@ -172,7 +172,7 @@ Resources:
             Principal: '*'
             Condition:
               ArnEquals:
-                'aws:Sourcearn': !Sub 'arn:aws:s3:::${pGuardDutyBucketName}'
+                'aws:Sourcearn': !Sub 'arn:${AWS::Partition}:s3:::${pGuardDutyBucketName}'
       Queues:
         - !Ref rCloudTrailDeadLetterQueue
 
@@ -215,11 +215,11 @@ Resources:
             Principal: '*'
             Condition:
               ArnEquals:
-                'aws:Sourcearn': !Sub 'arn:aws:s3:::${pControlTowerBucketName}'
+                'aws:Sourcearn': !Sub 'arn:${AWS::Partition}:s3:::${pCloudTrailBucketName}'
       Queues:
         - !Ref rCloudTrailQueue
 
-  rControlTowerPreProcessedDeadLetterQueue:
+  rCloudTrailPreProcessedDeadLetterQueue:
     Type: 'AWS::SQS::Queue'
     Metadata:
       cfn_nag:
@@ -231,11 +231,11 @@ Resources:
           - id: CKV_AWS_27
             comment: SQS queues are encrypted via the 'SqsManagedSseEnabled' property being set to 'True'
     Properties:
-      QueueName: !Sub '${pControlTowerBucketName}-preproc-dlq'
+      QueueName: !Sub '${pCloudTrailBucketName}-preproc-dlq'
       VisibilityTimeout: 30
       SqsManagedSseEnabled: True
 
-  rControlTowerPreProcessedDeadLetterQueuePolicy:
+  rCloudTrailPreProcessedDeadLetterQueuePolicy:
     Type: 'AWS::SQS::QueuePolicy'
     Properties:
       PolicyDocument:
@@ -244,16 +244,16 @@ Resources:
               - 'sqs:*'
             Effect: Allow
             Resource: !GetAtt 
-              - rControlTowerPreProcessedDeadLetterQueue
+              - rCloudTrailPreProcessedDeadLetterQueue
               - Arn
             Principal: '*'
             Condition:
               ArnEquals:
-                'aws:Sourcearn': !Sub 'arn:aws:s3:::${pGuardDutyBucketName}'
+                'aws:Sourcearn': !Sub 'arn:${AWS::Partition}:s3:::${pGuardDutyBucketName}'
       Queues:
-        - !Ref rControlTowerPreProcessedDeadLetterQueue
+        - !Ref rCloudTrailPreProcessedDeadLetterQueue
 
-  rControlTowerPreProcessedQueue:
+  rCloudTrailPreProcessedQueue:
     Type: 'AWS::SQS::Queue'
     Metadata:
       cfn_nag:
@@ -265,16 +265,16 @@ Resources:
           - id: CKV_AWS_27
             comment: SQS queues are encrypted via the 'SqsManagedSseEnabled' property being set to 'True'
     Properties:
-      QueueName: !Sub '${pControlTowerBucketName}-preproc'
+      QueueName: !Sub '${pCloudTrailBucketName}-preproc'
       VisibilityTimeout: 300
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt 
-          - rControlTowerPreProcessedDeadLetterQueue
+          - rCloudTrailPreProcessedDeadLetterQueue
           - Arn
         maxReceiveCount: 5
       SqsManagedSseEnabled: True
 
-  rControlTowerPreProcessedQueuePolicy:
+  rCloudTrailPreProcessedQueuePolicy:
     Type: 'AWS::SQS::QueuePolicy'
     Metadata:
       cfn_nag:
@@ -288,25 +288,25 @@ Resources:
             Action: 'sqs:SendMessage'
             Effect: Allow
             Resource: !GetAtt 
-              - rControlTowerPreProcessedQueue
+              - rCloudTrailPreProcessedQueue
               - Arn
             Principal: '*'
             Condition:
               ArnLike:
-                aws:SourceArn: !Ref rControlTowerSNSTopic
+                aws:SourceArn: !Ref rOrgLevelLogsSNSTopic
           - 
             Action: 'sqs:*'
             Effect: Allow
             Resource: !GetAtt 
-              - rControlTowerPreProcessedQueue
+              - rCloudTrailPreProcessedQueue
               - Arn
             Principal: 
               AWS:
-                !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+                !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:root'
       Queues:
-        - !Ref rControlTowerPreProcessedQueue
+        - !Ref rCloudTrailPreProcessedQueue
 
-  rControlTowerSNSTopic:
+  rOrgLevelLogsSNSTopic:
     Type: 'AWS::SNS::Topic'
     Metadata:
       cfn_nag:
@@ -318,33 +318,33 @@ Resources:
           - id: CKV_AWS_26
             comment: SNS topics cannot use Amazon-managed SSE keys, KMS keys have caused issues for us in the past
     Properties:      
-      TopicName: 'deepwatch-controltowerlogs-preprocessed'
+      TopicName: 'deepwatch-org-level-logs-preprocessed'
 
-  rControlTowerSNSTopicPolicy:
+  rOrgLevelLogsSNSTopicPolicy:
     Type: 'AWS::SNS::TopicPolicy'
     Properties:
       PolicyDocument:
         Statement:
           - Action: 'SNS:Publish'
             Effect: Allow
-            Resource: !Ref rControlTowerSNSTopic
+            Resource: !Ref rOrgLevelLogsSNSTopic
             Principal: 
               Service: 's3.amazonaws.com'
             Condition:
               ArnLike:
-                aws:SourceArn: !Sub 'arn:aws:s3:::${pControlTowerBucketName}'
+                aws:SourceArn: !Sub 'arn:${AWS::Partition}:s3:::${pCloudTrailBucketName}'
       Topics:
-        - !Ref rControlTowerSNSTopic
+        - !Ref rOrgLevelLogsSNSTopic
 
-  rControlTowerSNSSubscription:
+  rCloudTrailSNSSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      TopicArn: !Ref rControlTowerSNSTopic
-      Endpoint: !GetAtt rControlTowerPreProcessedQueue.Arn
+      TopicArn: !Ref rOrgLevelLogsSNSTopic
+      Endpoint: !GetAtt rCloudTrailPreProcessedQueue.Arn
       Protocol: sqs
       RawMessageDelivery: true
 
-  rControlTowerPreProcessedLambdaFunction:
+  rCloudTrailPreProcessedLambdaFunction:
     Type: 'AWS::Lambda::Function'
     Metadata:
       cfn_nag:
@@ -394,7 +394,7 @@ Resources:
 
       Handler: index.lambda_handler
       Role: !GetAtt 
-        - rControlTowerPreProcessedLambdaIAMRole
+        - rCloudTrailPreProcessedLambdaIAMRole
         - Arn
       Runtime: python3.9
       Timeout: 5
@@ -402,7 +402,7 @@ Resources:
         Variables:
           cloudtrail_queue_url: !Ref rCloudTrailQueue
 
-  rControlTowerPreProcessedLambdaIAMRole:
+  rCloudTrailPreProcessedLambdaIAMRole:
     Type: 'AWS::IAM::Role'
     Metadata:
       cfn_nag:
@@ -420,7 +420,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - PolicyName: ControlTowerPreProcessedLambdaIAMRole
+        - PolicyName: CloudTrailPreProcessedLambdaIAMRole
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -431,7 +431,7 @@ Resources:
                   - 'SQS:GetQueueAttributes'
                   - 'SQS:ChangeMessageVisibility'
                 Resource: !GetAtt 
-                  - rControlTowerPreProcessedQueue
+                  - rCloudTrailPreProcessedQueue
                   - Arn
               - Effect: Allow
                 Action:
@@ -451,29 +451,29 @@ Resources:
                   - 'logs:CreateLogGroup'
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
-                Resource: 'arn:aws:logs:*:*:*'
+                Resource: !Sub 'arn:${AWS::Partition}:logs:*:*:*'
 
-  rControlTowerPreProcessedLambdaInvokePermission:
+  rCloudTrailPreProcessedLambdaInvokePermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
       FunctionName: !GetAtt 
-        - rControlTowerPreProcessedLambdaFunction
+        - rCloudTrailPreProcessedLambdaFunction
         - Arn
       Action: 'lambda:InvokeFunction'
       Principal: s3.amazonaws.com
       SourceAccount: !Ref 'AWS::AccountId'
-      SourceArn: !Sub 'arn:aws:sqs:::${rControlTowerPreProcessedQueue}'
+      SourceArn: !Sub 'arn:${AWS::Partition}:sqs:::${rCloudTrailPreProcessedQueue}'
 
-  rControlTowerPreProcessedLambdaFunctionEventSourceMapping:
+  rCloudTrailPreProcessedLambdaFunctionEventSourceMapping:
     Type: 'AWS::Lambda::EventSourceMapping'
     Properties:
       BatchSize: 10
       Enabled: true
       EventSourceArn: !GetAtt 
-        - rControlTowerPreProcessedQueue
+        - rCloudTrailPreProcessedQueue
         - Arn
       FunctionName: !GetAtt 
-        - rControlTowerPreProcessedLambdaFunction
+        - rCloudTrailPreProcessedLambdaFunction
         - Arn
 
   rCustomResourceLambdaIAMRole:
@@ -499,16 +499,16 @@ Resources:
                   - 's3:GetBucketNotification'
                   - 's3:PutBucketNotification'
                 Resource: 
-                  - !Sub 'arn:aws:s3:::${pGuardDutyBucketName}'
-                  - !Sub 'arn:aws:s3:::${pControlTowerBucketName}'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${pGuardDutyBucketName}'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${pCloudTrailBucketName}'
               - Effect: Allow
                 Action:
                   - 'logs:CreateLogGroup'
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
-                Resource: 'arn:aws:logs:*:*:*'
+                Resource: !Sub 'arn:${AWS::Partition}:logs:*:*:*'
 
-  rCustomResourceLambdaFunction:
+  rCreateS3NotifLambdaFunction:
     Type: 'AWS::Lambda::Function'
     Metadata:
       cfn_nag:
@@ -555,20 +555,20 @@ Resources:
                   if event['RequestType'] == 'Delete':
                       print("Request Type:",event['RequestType'])
                       GuardDutyBucket=event['ResourceProperties']['GuardDutyBucket']
-                      ControlTowerBucket=event['ResourceProperties']['ControlTowerBucket']
+                      CloudTrailBucket=event['ResourceProperties']['CloudTrailBucket']
                       delete_notification(GuardDutyBucket)
-                      delete_notification(ControlTowerBucket)
-                      responseData={'GuardDutyBucket':GuardDutyBucket,'ControlTowerBucket':ControlTowerBucket}
+                      delete_notification(CloudTrailBucket)
+                      responseData={'GuardDutyBucket':GuardDutyBucket,'CloudTrailBucket':CloudTrailBucket}
                       print("Sending response to custom resource after Delete")
                   elif event['RequestType'] == 'Create' or event['RequestType'] == 'Update':
                       print("Request Type:",event['RequestType'])
                       GuardDutyQueueArn=event['ResourceProperties']['GuardDutyQueueArn']
-                      ControlTowerSNSTopicArn=event['ResourceProperties']['ControlTowerSNSTopicArn']
+                      OrgLevelSNSTopicArn=event['ResourceProperties']['OrgLevelSNSTopicArn']
                       GuardDutyBucket=event['ResourceProperties']['GuardDutyBucket']
-                      ControlTowerBucket=event['ResourceProperties']['ControlTowerBucket']
+                      CloudTrailBucket=event['ResourceProperties']['CloudTrailBucket']
                       add_notification(GuardDutyQueueArn, GuardDutyBucket, 'SQS')
-                      add_notification(ControlTowerSNSTopicArn, ControlTowerBucket, 'SNS')
-                      responseData={'GuardDutyBucket':GuardDutyBucket,'ControlTowerBucket':ControlTowerBucket}
+                      add_notification(OrgLevelSNSTopicArn, CloudTrailBucket, 'SNS')
+                      responseData={'GuardDutyBucket':GuardDutyBucket,'CloudTrailBucket':CloudTrailBucket}
                       print("Sending response to custom resource")
                   responseStatus = 'SUCCESS'
               except Exception as e:
@@ -578,7 +578,7 @@ Resources:
               cfnresponse.send(event, context, responseStatus, responseData)
 
           def add_notification(DestinationArn, Bucket, DestinationType):
-              if DestinationType == 'SQS':              
+              if DestinationType == 'SQS':
                   bucket_notification = s3.BucketNotification(Bucket)
                   response = bucket_notification.put(
                     NotificationConfiguration={
@@ -622,14 +622,14 @@ Resources:
     Type: 'Custom::LambdaTrigger'
     Properties:
       ServiceToken: !GetAtt 
-        - rCustomResourceLambdaFunction
+        - rCreateS3NotifLambdaFunction
         - Arn
       GuardDutyQueueArn: !GetAtt 
         - rGuardDutyQueue
         - Arn
-      ControlTowerSNSTopicArn: !Ref rControlTowerSNSTopic
+      OrgLevelSNSTopicArn: !Ref rOrgLevelLogsSNSTopic
       GuardDutyBucket: !Ref pGuardDutyBucketName
-      ControlTowerBucket: !Ref pControlTowerBucketName
+      CloudTrailBucket: !Ref pCloudTrailBucketName
 
   rDeepwatchPolicy:
     Type: 'AWS::IAM::ManagedPolicy'
@@ -649,7 +649,7 @@ Resources:
               - 'sqs:ReceiveMessage'
               - 'sqs:GetQueueUrl'
               - 'sqs:SendMessage'
-              - 'sqs:DeleteMessage'              
+              - 'sqs:DeleteMessage'
             Resource:
               - !GetAtt [rCloudTrailQueue, Arn]
               - !GetAtt [rGuardDutyQueue, Arn]
@@ -665,8 +665,8 @@ Resources:
               - 's3:GetLifecycleConfiguration'
               - 's3:GetBucketCORS'
             Resource:
-              - !Sub 'arn:aws:s3:::${pGuardDutyBucketName}'
-              - !Sub 'arn:aws:s3:::${pControlTowerBucketName}'
+              - !Sub 'arn:${AWS::Partition}:s3:::${pGuardDutyBucketName}'
+              - !Sub 'arn:${AWS::Partition}:s3:::${pCloudTrailBucketName}'
       ManagedPolicyName: !Ref pDeepwatchRoleName
 
   rDeepwatchRole:
