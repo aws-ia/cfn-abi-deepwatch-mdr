@@ -29,3 +29,24 @@ tests:
     parameters:
       pSRASourceS3BucketName: $[taskcat_autobucket]
       pDisableGuardDuty: 'Yes'
+
+  logging-top-level-nonct:
+    regions:
+      - us-east-1
+    template: templates/deepwatch-root-stack.yaml
+    parameters:
+      pSRASourceS3BucketName: $[taskcat_autobucket]
+      pSRAS3BucketRegion: us-east-1
+      pAutoEnableS3Logs: 'true'
+      pAutoEnableKubernetesAuditLogs: 'false'
+      pAutoEnableMalwareProtection: 'false'
+      pDeepwatchRoleName: 'deepwatch-mdr-role'
+      pEnableLambdaDataEvents: 'false'
+      pEnableS3DataEvents: 'true'
+      pDisableGuardDuty: 'Yes'
+      pControlTower: 'false'
+      pLogArchiveAccountId: '866786363886'
+      pSecurityAccountId: '809545598792'
+      pGovernedRegions: 'us-east-1,us-east-2'
+      pAdminRoleName: 'AWSCloudFormationStackSetAdministrationRole'
+      pExecRoleName: 'AWSCloudFormationStackSetExecutionRole'

@@ -228,7 +228,7 @@ def delete_s3_buckets(item):
                 else:
                     raise exe
 
-def list_all_parameters(ssm_session=SSM):
+def list_all_parameters(ssm_session):
     ''''List all parameters in the account'''
     response = ssm_session.describe_parameters()
     parameters = response['Parameters']
@@ -240,6 +240,7 @@ def list_all_parameters(ssm_session=SSM):
 def delete_parameters(item):
     '''Delete all parameters created in the account'''
 
+    print(f"Recieved item: {item}")
     filters = item['Filter']
     (ssm_session, account, target) = get_client_session(item, 'ssm')
     print(f"SSM action on {target} with filters: {filters}")
@@ -247,9 +248,13 @@ def delete_parameters(item):
     parameters = list_all_parameters(ssm_session)
     for parameter in parameters:
         param_name = parameter['Name']
+        print(f"param_name: {param_name}")
         if param_name.startswith(filters):
             print(f"..Deleting parameter {param_name}.")
+            res = ssm_session.get_parameter(Name=param_name)['Parameter']['ARN']
+            print(f"res: {res}")
             ssm_session.delete_parameter(Name=param_name)
+            print(f"..Deleted parameter {param_name}.")
 
 def get_temp_credentials(aws_account, role_name='AWSControlTowerExecution'):
     '''
@@ -288,6 +293,7 @@ def establish_remote_session(account):
             aws_secret_access_key=sts_creds['SecretAccessKey'],
             aws_session_token=sts_creds['SessionToken']
             )
+            print(f"Established session for {account} with {role}")
             break
 
     return result
@@ -356,12 +362,12 @@ def get_management_account_id():
     '''
     return ORG.describe_organization()['Organization']['MasterAccountId']
 
-def get_list_of_detectors():
+def get_list_of_detectors(gd_client):
     '''
     Get list of GuardDuty detectors
     '''
     detectors = []
-    paginator = GD.get_paginator('list_detectors')
+    paginator = gd_client.get_paginator('list_detectors')
     for page in paginator.paginate():
         detectors += page['DetectorIds']
     return detectors
@@ -385,11 +391,10 @@ def delete_detector():
             gd_client = boto3.client('guardduty')
 
         if gd_client:
-            detector_ids = get_list_of_detectors()
+            detector_ids = get_list_of_detectors(gd_client)
             for det_id in detector_ids:
                 print('Deleting GuardDuty Detector in %s', account['Id'])
                 gd_client.delete_detector(DetectorId=det_id)
-
 
 def list_cb_projects():
     '''
@@ -419,7 +424,6 @@ def get_account_info(ss_name='AWSControlTowerLoggingResources'):
     '''
     List first stack instances in a stackset
     '''
-    result = None
 
     if ss_name in list_active_stackset_names():
         instance = CF.list_stack_instances(StackSetName=ss_name)
@@ -427,8 +431,11 @@ def get_account_info(ss_name='AWSControlTowerLoggingResources'):
         for account in get_list_of_accounts():
             if account['Id'] == account_id:
                 account_name = account['Name']
-        result = {'AccountName': account_name, 'AccountID': account_id}
-    return result
+    else:
+        account_id = get_account_id('Log Archive')
+        account_name = 'LogArchive'
+
+    return {'AccountName': 'LogArchive', 'AccountID': account_id}
 
 def get_client_session(item, client_name):
     '''
@@ -437,6 +444,7 @@ def get_client_session(item, client_name):
 
     account = None
     if 'Account' in item:
+        print(f"Found account: {item['Account']}")
         if item['Account'] in ACCOUNTS:
             account = get_account_id(ACCOUNTS[item['Account']])
     if account:
@@ -518,7 +526,6 @@ if __name__ == '__main__':
         AUDIT_ACCT_NAME = 'Audit'
 
     ACCOUNTS = {"log_account": LOG_ACCT_NAME, "audit": AUDIT_ACCT_NAME}
-    print('Recieved Account Info: %s', ACCOUNTS)
     CLEAR_CFG = ARGS.config
 
     if isfile(CLEAR_CFG):
