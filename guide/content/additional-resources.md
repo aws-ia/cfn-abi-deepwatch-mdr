@@ -11,8 +11,8 @@ description: Additional resources
 ## AWS services
 
 * [Deepwatch MDR ABI](https://github.com/aws-ia/cfn-abi-deepwatch-mdr)
-* [AWS SRA GuardDuty](https://github.com/aws-ia/cfn-abi-amazon-guardduty)
-* [AWS SRA CloudTrail](https://github.com/aws-ia/cfn-abi-aws-cloudtrail)
+* [AWS SRA GuardDuty](https://github.com/aws-samples/aws-security-reference-architecture-examples/tree/main/aws_sra_examples/modules/guardduty-org-module/templates)
+* [AWS SRA CloudTrail](https://github.com/aws-samples/aws-security-reference-architecture-examples/tree/main/aws_sra_examples/modules/cloudtrail-org-module/templates)
 
 
 ## Other resources
