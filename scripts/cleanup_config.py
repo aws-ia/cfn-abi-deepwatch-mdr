@@ -58,11 +58,10 @@ def list_stackset_names(context=CF, filters=None):
 
 def list_stackset_instances(context=CF, ss_name=None):
     '''List all stackset instances in the account'''
-    cf_client = context.client('cloudformation')
-    response = cf_client.list_stack_instances(StackSetName=ss_name)
+    response = context.list_stack_instances(StackSetName=ss_name)
     stackinstances = response['Summaries']
     while response.get('NextToken'):
-        response = cf_client.list_stack_instances(StackSetName=ss_name,
+        response = context.list_stack_instances(StackSetName=ss_name,
                                         NextToken=response['NextToken'])
         stackinstances.extend(response['Summaries'])
     return stackinstances
@@ -83,7 +82,7 @@ def si_account_list(stackset_name):
         stackinstance_names += [stackinstance['Account']]
     return stackinstance_names
 
-def si_region_list(context, stackset_name):
+def si_region_list(stackset_name):
     '''List all stackset instance regions'''
     stackinstances = list_stackset_instances(ss_name=stackset_name)
     stackinstance_regions = []
@@ -178,11 +177,11 @@ def delete_stack(filters='tCaT-'):
         stack_name = stack['StackName']
         stack_status = stack['StackStatus']
         if stack_name.startswith(filters) and stack_status != 'DELETE_COMPLETE':
-            print('Deleting stack: %s', stack_name)
+            print(f"Deleting stack: {stack_name}")
             CF.delete_stack(StackName=stack_name)
             wait = 1
             while list_stack_status_by_name(stack_name) not in STACKSTATUS and wait < 60:
-                print('Wait: %s, Stack: %s', stack_name, wait)
+                print(f"Wait: {wait}, Stack: {stack_name}")
                 sleep(10)
                 wait += 1
 
@@ -244,7 +243,7 @@ def delete_parameters(item):
     print(f"Recieved item: {item}")
     filters = item['Filter']
     (ssm_session, account, target) = get_client_session(item, 'ssm')
-    print(f"SSM action on {target} with filters: {filters}")
+    print(f"SSM action on {account}/{target} with filters: {filters}")
 
     parameters = list_all_parameters(context=ssm_session)
     for parameter in parameters:
@@ -349,7 +348,7 @@ def delete_cw_logs(item):
 
     filters = item['Filter']
     (cw_session, account, target) = get_client_session(item, 'logs')
-    print(f"LOG GROUP action on {target} with filters: {filters}")
+    print(f"LOG GROUP action on {account}/{target} with filters: {filters}")
 
     log_groups = list_cw_lognames(context=cw_session)
     for log_group_name in log_groups:
@@ -482,7 +481,7 @@ def delete_iam_role(item):
 
     role_name = item['Filter']
     (iam_session, account, target) = get_client_session(item, 'iam')
-    print(f"IAM action on {target} with role_name: {role_name}")
+    print(f"IAM action on {account}/{target} with role_name: {role_name}")
 
     try:
         policies = iam_session.list_attached_role_policies(RoleName=role_name)
