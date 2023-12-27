@@ -420,7 +420,7 @@ def delete_build_projects(filters='sra-codebuild-'):
             cb_session = SESSION.client('codebuild')
             cb_session.delete_project(name=project)
 
-def get_account_info(ss_name='AWSControlTowerLoggingResources'):
+def get_log_account_info(ss_name='AWSControlTowerLoggingResources'):
     '''
     List first stack instances in a stackset
     '''
@@ -436,6 +436,23 @@ def get_account_info(ss_name='AWSControlTowerLoggingResources'):
         account_name = 'LogArchive'
 
     return {'AccountName': 'LogArchive', 'AccountID': account_id}
+
+def get_audit_account_info(ss_name='AWSControlTowerLoggingResources'):
+    '''
+    List first stack instances in a stackset
+    '''
+
+    if ss_name in list_active_stackset_names():
+        instance = CF.list_stack_instances(StackSetName=ss_name)
+        account_id = instance['Summaries'][0]['Account']
+        for account in get_list_of_accounts():
+            if account['Id'] == account_id:
+                account_name = account['Name']
+    else:
+        account_id = get_account_id('Log Archive')
+        account_name = 'Audit'
+
+    return {'AccountName': account_name, 'AccountID': account_id}
 
 def get_client_session(item, client_name):
     '''
@@ -513,8 +530,8 @@ if __name__ == '__main__':
 
     ARGS = PARSER.parse_args()
 
-    LOG_ACCT_INFO = get_account_info('AWSControlTowerLoggingResources')
-    AUDIT_ACCT_INFO = get_account_info('AWSControlTowerSecurityResources')
+    LOG_ACCT_INFO = get_log_account_info()
+    AUDIT_ACCT_INFO = get_audit_account_info()
     if LOG_ACCT_INFO:
         LOG_ACCT_NAME = LOG_ACCT_INFO['AccountName']
     else:

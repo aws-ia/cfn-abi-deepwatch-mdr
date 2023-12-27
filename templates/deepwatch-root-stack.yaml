@@ -278,7 +278,11 @@ Resources:
       Capabilities:
         - CAPABILITY_NAMED_IAM
       Description: Creates and configures all of the resources needed to begin ingestion of logs into Deepwatch MDR
-      ExecutionRoleName: !Ref pExecRoleName
+      ExecutionRoleName:
+        !If
+          - cControlTowerEnabled
+          - "AWSControlTowerExecution"
+          - !Ref pExecRoleName
       ManagedExecution:
         Active: true
       OperationPreferences:
