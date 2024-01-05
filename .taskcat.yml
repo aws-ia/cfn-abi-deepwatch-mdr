@@ -45,8 +45,8 @@ tests:
       pEnableS3DataEvents: 'true'
       pDisableGuardDuty: 'Yes'
       pControlTower: 'false'
-      pLogArchiveAccountId: '866786363886'
-      pSecurityAccountId: '809545598792'
+      pLogArchiveAccountId: $[taskcat_ssm_/nonct/log-archive-account-id]
+      pSecurityAccountId: $[taskcat_ssm_/nonct/audit-account-id]
       pGovernedRegions: 'us-east-1,us-east-2'
       pAdminRoleName: 'AWSCloudFormationStackSetAdministrationRole'
       pExecRoleName: 'AWSCloudFormationStackSetExecutionRole'
