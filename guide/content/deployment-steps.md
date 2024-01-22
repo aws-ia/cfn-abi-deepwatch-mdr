@@ -21,7 +21,15 @@ This option creates all of the necessary resources for ingestion of AWS security
         * **pAutoEnableS3Logs**: `true`
         * **pEnableS3DataEvents**: `true`
         * **pEnableLambdaDataEvents**: `true`
-
+        * **pCreateAWSControlTowerExecutionRole**: `true` # Set to false if you have already created the AWSControlTowerExecution role in the management account
+   **Note:** Include below parameters if you are deploying this solution in an Organization with no Control Tower.
+        * **pControlTower**: `false`
+        * **pLogArchiveAccountId**: 111111111111 # Your log-archive-account-id
+        * **pSecurityAccountId**: 222222222222 # Your audit-account-id
+        * **pGovernedRegions**: 'us-east-1,us-east-2' # List of regions 
+        * **pSRASourceS3BucketName**: `aws-abi`
+        * **pAdminRoleName**: 'AWSCloudFormationStackSetAdministrationRole' # Replace with your admin role name
+        * **pExecRoleName**: 'AWSCloudFormationStackSetExecutionRole' # Replace with your exec role name
 3. To launch the stack, choose the **Capabilities** and then **Submit**.
 
     [x] I acknowledge that AWS CloudFormation might create IAM resources with custom names.
@@ -42,7 +50,7 @@ The templates provided by this ABI package are deployable through CfCT.
 
 #### Prerequisites
 
-The CfCT solution can't launch resources in the management account, so you must manually create a role in that account that has necessary permissions.
+The CfCT solution can't launch resources in the management account by default. You need select `pCreateAWSControlTowerExecutionRole : true` to allow the stack to create the role or must manually create a role in that account that has necessary permissions. 
 
 #### How it works
 
