@@ -5,6 +5,8 @@
 # managed and local tasks always use these variables for the project and project type path
 PROJECT_PATH=${BASE_PATH}/project
 PROJECT_TYPE_PATH=${BASE_PATH}/projecttype
+NON_CT_ENV="039084729647"
+acct_id=$(aws sts get-caller-identity --output text --query 'Account')
 
 cd ${PROJECT_PATH}
 
@@ -32,10 +34,16 @@ run_test() {
     taskcat test run -t $1
 }
 
-# Run taskcat e2e test
-run_test "logging-top-level"
+# if account id is xxxx do this
+if [ "$acct_id" == ${NON_CT_ENV} ]; then
+    run_test "logging-top-level-nonct"
+else
+    run_test "logging-top-level"
+    run_test "logging-top-level-defaults"
+fi
 
-run_test "logging-top-level-defaults"
+# Run taskcat e2e test
+
 
 ## Executing ash tool
 
