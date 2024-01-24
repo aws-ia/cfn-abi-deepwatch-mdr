@@ -8,6 +8,8 @@ PROJECT_TYPE_PATH=${BASE_PATH}/projecttype
 NON_CT_ENV="039084729647"
 acct_id=$(aws sts get-caller-identity --output text --query 'Account')
 
+export REGION=$(grep -A1 regions: .taskcat.yml | awk '/ - / {print $NF}' |sort | uniq -c |sort -k1| head -1 |awk '{print $NF}')
+
 cd ${PROJECT_PATH}
 
 cleanup_region() {
@@ -26,12 +28,17 @@ cleanup_all_regions() {
 }
 
 run_test() {
-    echo "Running e2e test: $1"
     cleanup_all_regions
-    echo $AWS_DEFAULT_REGION
     unset AWS_DEFAULT_REGION
-    echo $AWS_DEFAULT_REGION
-    taskcat test run -t $1
+    if [ -z "$1" ]; then
+        echo "Running e2e test: ALL"
+        taskcat test run -n
+        .project_automation/functional_tests/scoutsuite/scoutsuite.sh
+    else
+        echo "Running e2e test: $1"
+        taskcat test run -n -t $1
+        .project_automation/functional_tests/scoutsuite/scoutsuite.sh
+    fi
 }
 
 # if account id is xxxx do this
