@@ -650,6 +650,7 @@ Resources:
               - 'sqs:GetQueueUrl'
               - 'sqs:SendMessage'
               - 'sqs:DeleteMessage'
+              - 'sqs:changemessagevisibility'
             Resource:
               - !GetAtt [rCloudTrailQueue, Arn]
               - !GetAtt [rGuardDutyQueue, Arn]
@@ -664,6 +665,7 @@ Resources:
               - 's3:GetBucketLogging'
               - 's3:GetLifecycleConfiguration'
               - 's3:GetBucketCORS'
+              - 's3:GetObjectVersion'
             Resource:
               - !Sub 'arn:${AWS::Partition}:s3:::${pGuardDutyBucketName}'
               - !Sub 'arn:${AWS::Partition}:s3:::${pCloudTrailBucketName}'
