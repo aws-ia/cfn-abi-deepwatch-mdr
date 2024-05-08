@@ -645,7 +645,6 @@ Resources:
           - Effect: Allow
             Action:
               - 'sqs:GetQueueAttributes'
-              - 'sqs:ListQueues'
               - 'sqs:ReceiveMessage'
               - 'sqs:GetQueueUrl'
               - 'sqs:SendMessage'
@@ -654,6 +653,9 @@ Resources:
             Resource:
               - !GetAtt [rCloudTrailQueue, Arn]
               - !GetAtt [rGuardDutyQueue, Arn]
+          - Effect: Allow
+            Action: 'sqs:ListQueues'
+            Resource: '*'
           - Effect: Allow
             Action:
               - 's3:ListBucket'
