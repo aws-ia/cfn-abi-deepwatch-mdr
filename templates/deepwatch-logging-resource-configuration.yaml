@@ -645,14 +645,17 @@ Resources:
           - Effect: Allow
             Action:
               - 'sqs:GetQueueAttributes'
-              - 'sqs:ListQueues'
               - 'sqs:ReceiveMessage'
               - 'sqs:GetQueueUrl'
               - 'sqs:SendMessage'
               - 'sqs:DeleteMessage'
+              - 'sqs:changemessagevisibility'
             Resource:
               - !GetAtt [rCloudTrailQueue, Arn]
               - !GetAtt [rGuardDutyQueue, Arn]
+          - Effect: Allow
+            Action: 'sqs:ListQueues'
+            Resource: '*'
           - Effect: Allow
             Action:
               - 's3:ListBucket'
@@ -664,9 +667,18 @@ Resources:
               - 's3:GetBucketLogging'
               - 's3:GetLifecycleConfiguration'
               - 's3:GetBucketCORS'
+              - 's3:GetObjectVersion'
             Resource:
               - !Sub 'arn:${AWS::Partition}:s3:::${pGuardDutyBucketName}'
               - !Sub 'arn:${AWS::Partition}:s3:::${pCloudTrailBucketName}'
+              - !Sub 'arn:${AWS::Partition}:s3:::${pGuardDutyBucketName}/*'
+              - !Sub 'arn:${AWS::Partition}:s3:::${pCloudTrailBucketName}/*'
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - !GetAtt rGetCloudTrailS3BucketKMSKey.KmsKeyId
+              - !GetAtt rGetGuardDutyS3BucketKMSKey.KmsKeyId
       ManagedPolicyName: !Ref pDeepwatchRoleName
 
   rDeepwatchRole:
@@ -689,6 +701,133 @@ Resources:
         - !Ref rDeepwatchPolicy
       Path: /
       RoleName: !Ref pDeepwatchRoleName
+
+  rGetCloudTrailS3BucketKMSKey:
+    Type: Custom::LambdaCustomResource
+    Properties:
+      ServiceToken: !GetAtt rGetS3KmsKeyIdLambdaFunction.Arn
+      BucketName: !Ref pCloudTrailBucketName
+
+  rGetGuardDutyS3BucketKMSKey:
+    Type: Custom::LambdaCustomResource
+    Properties:
+      ServiceToken: !GetAtt rGetS3KmsKeyIdLambdaFunction.Arn
+      BucketName: !Ref pGuardDutyBucketName
+
+  rGetS3KmsKeyIdLambdaFunction:
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W58
+            reason: Lambda role provides access to CloudWatch Logs
+          - id: W89
+            reason: Lambda does not need to communicate with VPC resources.
+          - id: W92
+            reason: Lambda does not need reserved concurrent executions.
+      checkov:
+        skip:
+          - id: CKV_AWS_115
+            comment: Lambda does not need reserved concurrent executions.
+          - id: CKV_AWS_116
+            comment: DLQ not needed, as Lambda function only triggered by CloudFormation events.
+          - id: CKV_AWS_117
+            comment: Lambda does not need to communicate with VPC resources.
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Get KMS key id of an S3 bucket
+      Handler: index.lambda_handler
+      Role: !GetAtt rGetS3KmsKeyIdLambdaRole.Arn
+      Runtime: python3.10
+      Timeout: 60
+      Code:
+        ZipFile: |
+          import logging
+          import os
+
+          import boto3
+          import cfnresponse
+          from botocore.exceptions import ClientError
+
+          LOGGER = logging.getLogger(__name__)
+          log_level: str = os.environ.get("LOG_LEVEL", "ERROR")
+          LOGGER.setLevel(log_level)
+
+          def get_kms_key(bucket_name):
+              """
+              Get KMS Key used to encrypt the S3 bucket.
+              """
+              s3_client = boto3.client("s3")
+              try:
+                  response = s3_client.get_bucket_encryption(Bucket=bucket_name)
+                  kms_key_id = response["ServerSideEncryptionConfiguration"]["Rules"][0]["ApplyServerSideEncryptionByDefault"]["KMSMasterKeyID"]
+                  return kms_key_id
+              except ClientError as exe:
+                  if exe.response["Error"]["Code"] == "ServerSideEncryptionConfigurationNotFoundError":
+                    return None
+                  else:
+                    raise exe
+
+          def lambda_handler(event, context):
+              """
+              Lambda Handler.
+              """
+              bucket_name = event["ResourceProperties"]["BucketName"]
+              response_data = {}
+              try:
+                  data = get_kms_key(bucket_name)
+                  response_data['KmsKeyId'] = data
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data, None)
+              except Exception:
+                  LOGGER.exception("Unexpected!")
+                  cfnresponse.send(event, context, cfnresponse.FAILED, response_data, None)
+
+  rGetS3KmsKeyIdLogGroup:
+    DeletionPolicy: Retain
+    Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Retain
+    Properties:
+      RetentionInDays: 400
+
+  rGetS3KmsKeyIdLambdaRole:
+    Type: AWS::IAM::Role
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W11
+            reason: Allow * in resource when required
+          - id: W28
+            reason: The role name is defined to identify automation resources
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Policies:
+        - PolicyName: org-id
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: S3BucketPermissions
+                Effect: Allow
+                Action: s3:GetEncryptionConfiguration
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:s3:::${pGuardDutyBucketName}'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${pCloudTrailBucketName}'
+        - PolicyName: CloudWatchLogGroup
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: CloudWatchLogs
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:*:*
 
 Outputs:
   oCloudTrailQueueArn:
